@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pragya Flow · Role-Based Dashboards</title>
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            safelist: [
+                'bg-blue-100', 'text-blue-700',
+                'bg-purple-100', 'text-purple-700',
+                'bg-pink-100', 'text-pink-700',
+                'bg-amber-100', 'text-amber-700'
+            ]
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        * { scroll-behavior: smooth; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .login-bg { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
+        .role-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+        .role-admin { background: #ede9fe; color: #7c3aed; }
+        .role-lead { background: #dbeafe; color: #2563eb; }
+        .role-member { background: #e2e8f0; color: #475569; }
+        .stat-card { transition: all 0.2s ease; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -8px rgba(0,0,0,0.12); }
+        .project-card { transition: all 0.2s ease; }
+        .project-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -8px rgba(0,0,0,0.12); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect, useCallback } = React;
+
+        // --- MOCK DATA ---
+        const DEPARTMENTS = [
+            { department_id: 1, name: 'Engineering', color: 'blue', head_id: 101 },
+            { department_id: 2, name: 'Design', color: 'purple', head_id: 102 },
+            { department_id: 3, name: 'Marketing', color: 'pink', head_id: 104 },
+            { department_id: 4, name: 'Operations', color: 'amber', head_id: 105 }
+        ];
+
+        const USERS = [
+            { user_id: 101, full_name: 'Alex Rivera', role: 'CEO', department_id: 1, isAdmin: true, teamLead: false, avatar: '👨‍💼', email: 'alex@company.com', password: 'password123' },
+            { user_id: 102, full_name: 'Sarah Chen', role: 'Design Lead', department_id: 2, isAdmin: false, teamLead: true, avatar: '👩‍🎨', email: 'sarah@company.com', password: 'password123' },
+            { user_id: 103, full_name: 'Jordan Smith', role: 'Developer', department_id: 1, isAdmin: false, teamLead: false, avatar: '👨‍💻', email: 'jordan@company.com', password: 'password123' },
+            { user_id: 104, full_name: 'Taylor Reed', role: 'Marketing Head', department_id: 3, isAdmin: false, teamLead: true, avatar: '👩‍💼', email: 'taylor@company.com', password: 'password123' },
+            { user_id: 105, full_name: 'Morgan Lee', role: 'Ops Manager', department_id: 4, isAdmin: false, teamLead: true, avatar: '👨‍🔧', email: 'morgan@company.com', password: 'password123' },
+            { user_id: 106, full_name: 'Casey Kim', role: 'Product Designer', department_id: 2, isAdmin: false, teamLead: false, avatar: '👩‍💻', email: 'casey@company.com', password: 'password123' },
+            { user_id: 107, full_name: 'Riley Patel', role: 'Developer', department_id: 1, isAdmin: false, teamLead: false, avatar: '👨‍💻', email: 'riley@company.com', password: 'password123' },
+            { user_id: 108, full_name: 'Avery Johnson', role: 'Content Strategist', department_id: 3, isAdmin: false, teamLead: false, avatar: '👩‍💼', email: 'avery@company.com', password: 'password123' },
+            { user_id: 999, full_name: 'System Admin', role: 'Backend Manager', department_id: 1, isAdmin: true, teamLead: false, avatar: '🔧', email: 'admin@system.com', password: 'admin123' }
+        ];
+
+        const PROJECTS = [
+            { project_id: 1, name: 'Q4 Product Launch', description: 'Major product release for Q4 2026', status: 'ACTIVE', created_by: 101, created_at: '2026-08-01T10:00', departments_involved: [1, 2, 3], progress: 65 },
+            { project_id: 2, name: 'Website Redesign', description: 'Complete overhaul of company website', status: 'PLANNING', created_by: 102, created_at: '2026-08-15T14:00', departments_involved: [2, 3], progress: 20 },
+            { project_id: 3, name: 'Mobile App Development', description: 'Native mobile app for iOS and Android', status: 'ACTIVE', created_by: 101, created_at: '2026-07-20T09:00', departments_involved: [1, 2], progress: 45 }
+        ];
+
+        const TASKS = [
+            { task_id: 1, title: 'Fix Payment Gateway Edge Case', description: 'Resolve timeout during checkout', status: 'PENDING_ACCEPTANCE', priority_id: 4, deadline: '2026-09-01T17:00', assignee_id: 103, created_by: 101, project_id: 1 },
+            { task_id: 2, title: 'Create Q4 Marketing Banner Assets', description: 'Visual assets for campaign', status: 'BACKLOG', priority_id: 3, deadline: '2026-09-05T12:00', assignee_id: null, target_department_id: 2, created_by: 104, project_id: 1 },
+            { task_id: 3, title: 'Deploy new microservice', description: 'Container orchestration update', status: 'UNDER_REVIEW', priority_id: 2, deadline: '2026-08-30T10:00', assignee_id: 101, created_by: 105, project_id: 1 },
+            { task_id: 4, title: 'Design system audit', description: 'Review components for consistency', status: 'BLOCKED', priority_id: 2, deadline: '2026-09-10T16:00', assignee_id: null, target_department_id: 2, created_by: 102, project_id: 2 },
+            { task_id: 5, title: 'Social media campaign plan', description: 'Content calendar for Q4', status: 'COMPLETED', priority_id: 3, deadline: '2026-08-25T18:00', assignee_id: 104, created_by: 101, project_id: 1 },
+            { task_id: 6, title: 'API Integration for Mobile App', description: 'Connect mobile app to backend', status: 'PENDING_ACCEPTANCE', priority_id: 2, deadline: '2026-09-15T10:00', assignee_id: 107, created_by: 101, project_id: 3 },
+            { task_id: 7, title: 'UI/UX Design for Mobile App', description: 'Design mobile app screens', status: 'BACKLOG', priority_id: 2, deadline: '2026-09-20T18:00', assignee_id: 106, created_by: 102, project_id: 3 }
+        ];
+
+        const PRIORITY_BADGES = {
+            4: { label: 'Urgent', bg: 'bg-red-100 text-red-700', icon: 'fa-bolt' },
+            3: { label: 'High', bg: 'bg-orange-100 text-orange-700', icon: 'fa-arrow-up' },
+            2: { label: 'Medium', bg: 'bg-blue-100 text-blue-700', icon: 'fa-minus' },
+            1: { label: 'Low', bg: 'bg-slate-100 text-slate-700', icon: 'fa-arrow-down' },
+        };
+
+        const STATUS_COLORS = {
+            'PENDING_ACCEPTANCE': 'bg-purple-100 text-purple-700',
+            'BACKLOG': 'bg-slate-100 text-slate-700',
+            'IN_PROGRESS': 'bg-blue-100 text-blue-700',
+            'UNDER_REVIEW': 'bg-amber-100 text-amber-700',
+            'BLOCKED': 'bg-rose-100 text-rose-700',
+            'COMPLETED': 'bg-emerald-100 text-emerald-700'
+        };
+
+        const STATUS_LABELS = {
+            'PENDING_ACCEPTANCE': 'Pending Accept',
+            'BACKLOG': 'Backlog',
+            'IN_PROGRESS': 'In Progress',
+            'UNDER_REVIEW': 'Under Review',
+            'BLOCKED': 'Blocked',
+            'COMPLETED': 'Completed'
+        };
+
+        // --- HELPERS ---
+        const getAssigneeName = (id) => {
+            if (!id) return 'Unassigned';
+            const u = USERS.find(u => u.user_id === id);
+            return u ? u.full_name : 'Unassigned';
+        };
+        const getDeptName = (id) => {
+            if (!id) return '—';
+            const d = DEPARTMENTS.find(d => d.department_id === id);
+            return d ? d.name : 'Unknown';
+        };
+        const isAdmin = (user) => user?.isAdmin || false;
+        const isTeamLead = (userId) => {
+            const u = USERS.find(u => u.user_id === userId);
+            return u?.teamLead || false;
+        };
+        const formatDate = (dateStr) => {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        };
+
+        // --- ROLE-BASED TASK FILTER ---
+        function getVisibleTasks(user) {
+            if (!user) return [];
+            if (isAdmin(user)) return TASKS;
+            if (isTeamLead(user.user_id)) {
+                const deptMemberIds = USERS.filter(u => u.department_id === user.department_id).map(u => u.user_id);
+                return TASKS.filter(t =>
+                    t.assignee_id === user.user_id ||
+                    (t.assignee_id && deptMemberIds.includes(t.assignee_id)) ||
+                    t.created_by === user.user_id
+                );
+            }
+            return TASKS.filter(t => t.assignee_id === user.user_id);
+        }
+
+        // --- TOAST ---
+        function Toast({ message, type, onClose }) {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 3000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
+
+            const bgColor = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-rose-500' : 'bg-blue-500';
+            return (
+                <div className={`fixed bottom-6 right-6 z-50 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 fade-in max-w-sm`}>
+                    <i className={`fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}`}></i>
+                    <span className="text-sm font-medium">{message}</span>
+                    <button onClick={onClose} className="ml-2 text-white/70 hover:text-white"><i className="fas fa-times"></i></button>
+                </div>
+            );
+        }
+
+        // --- LOGIN PAGE ---
+        function LoginPage({ onLogin }) {
+            const [email, setEmail] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [isBackendLogin, setIsBackendLogin] = useState(false);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const user = USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+                if (user && user.password === password) {
+                    onLogin(user);
+                } else {
+                    setError('Invalid email or password. Try: alex@company.com / password123');
+                }
+            };
+
+            const quickLogin = (email) => {
+                const user = USERS.find(u => u.email === email);
+                if (user) {
+                    setEmail(email);
+                    setPassword('password123');
+                    onLogin(user);
+                }
+            };
+
+            const handleBackendLogin = () => {
+                setIsBackendLogin(true);
+                setEmail('admin@system.com');
+                setPassword('admin123');
+                // Auto-login for backend
+                const user = USERS.find(u => u.email === 'admin@system.com');
+                if (user) {
+                    onLogin(user);
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex items-center justify-center login-bg p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 fade-in">
+                        <div className="text-center mb-8">
+                            <div className="text-5xl mb-3">🚀</div>
+                            <h1 className="text-3xl font-bold text-slate-800">Pragya Flow</h1>
+                            <p className="text-sm text-slate-500 mt-1">Project & Task Management System</p>
+                        </div>
+
+                        <div className="mb-6">
+                            <p className="text-xs text-slate-500 mb-2 text-center">Quick Login:</p>
+                            <div className="flex flex-wrap gap-2 justify-center">
+                                <button onClick={() => quickLogin('alex@company.com')} className="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-full transition flex items-center gap-1">
+                                    <span className="role-badge role-admin">Admin</span> Alex
+                                </button>
+                                <button onClick={() => quickLogin('sarah@company.com')} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full transition flex items-center gap-1">
+                                    <span className="role-badge role-lead">Lead</span> Sarah
+                                </button>
+                                <button onClick={() => quickLogin('jordan@company.com')} className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full transition flex items-center gap-1">
+                                    <span className="role-badge role-member">Member</span> Jordan
+                                </button>
+                                <button onClick={() => quickLogin('taylor@company.com')} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full transition flex items-center gap-1">
+                                    <span className="role-badge role-lead">Lead</span> Taylor
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="relative mb-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-slate-200"></div>
+                            </div>
+                            <div className="relative flex justify-center text-xs">
+                                <span className="bg-white px-4 text-slate-400">or</span>
+                            </div>
+                        </div>
+
+                        <button 
+                            onClick={handleBackendLogin}
+                            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 rounded-lg transition flex items-center justify-center gap-2 mb-4"
+                        >
+                            <i className="fas fa-server"></i> Backend Management Login
+                        </button>
+                        <p className="text-[10px] text-slate-400 text-center -mt-2 mb-4">
+                            <i className="fas fa-info-circle"></i> System Admin access · admin@system.com / admin123
+                        </p>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Email</label>
+                                <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full p-3 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="alex@company.com" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Password</label>
+                                <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="w-full p-3 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="password123" />
+                            </div>
+                            {error && <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-lg border border-rose-200">{error}</div>}
+                            <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition">Sign In</button>
+                        </form>
+                        <div className="mt-6 text-center text-xs text-slate-400">
+                            <p>Demo: Use any email with password <span className="font-mono bg-slate-100 px-2 py-0.5 rounded">password123</span></p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- USER MANAGEMENT (Backend Admin) ---
+        function UserManagement({ user, onLogout, showToast }) {
+            const [users, setUsers] = useState(USERS);
+            const [editingUser, setEditingUser] = useState(null);
+            const [showAddForm, setShowAddForm] = useState(false);
+            const [formData, setFormData] = useState({
+                full_name: '',
+                email: '',
+                role: '',
+                department_id: '',
+                isAdmin: false,
+                teamLead: false,
+                password: 'password123'
+            });
+
+            const handleEdit = (user) => {
+                setEditingUser(user);
+                setFormData({
+                    full_name: user.full_name,
+                    email: user.email,
+                    role: user.role,
+                    department_id: user.department_id,
+                    isAdmin: user.isAdmin,
+                    teamLead: user.teamLead,
+                    password: user.password
+                });
+            };
+
+            const handleSave = () => {
+                if (editingUser) {
+                    const updatedUsers = users.map(u => 
+                        u.user_id === editingUser.user_id ? { ...u, ...formData } : u
+                    );
+                    setUsers(updatedUsers);
+                    setEditingUser(null);
+                    showToast('User updated successfully!', 'success');
+                } else {
+                    const newUser = {
+                        user_id: Math.max(...users.map(u => u.user_id)) + 1,
+                        ...formData,
+                        avatar: '👤'
+                    };
+                    setUsers([...users, newUser]);
+                    setShowAddForm(false);
+                    showToast('User added successfully!', 'success');
+                }
+                setFormData({
+                    full_name: '',
+                    email: '',
+                    role: '',
+                    department_id: '',
+                    isAdmin: false,
+                    teamLead: false,
+                    password: 'password123'
+                });
+            };
+
+            const handleDelete = (userId) => {
+                if (window.confirm('Are you sure you want to delete this user?')) {
+                    setUsers(users.filter(u => u.user_id !== userId));
+                    showToast('User deleted successfully!', 'success');
+                }
+            };
+
+            const handleCancel = () => {
+                setEditingUser(null);
+                setShowAddForm(false);
+                setFormData({
+                    full_name: '',
+                    email: '',
+                    role: '',
+                    department_id: '',
+                    isAdmin: false,
+                    teamLead: false,
+                    password: 'password123'
+                });
+            };
+
+            return (
+                <div className="space-y-5">
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-wrap items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <span className="text-2xl">🔧</span> User Management
+                                <span className="role-badge role-admin ml-2">System Admin</span>
+                            </h2>
+                            <p className="text-sm text-slate-500 mt-1">Manage all users, roles, and permissions.</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={() => setShowAddForm(true)}
+                                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-sm px-4 py-2 rounded-lg font-medium transition flex items-center gap-2"
+                            >
+                                <i className="fas fa-plus"></i> Add User
+                            </button>
+                            <button onClick={onLogout} className="bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm px-4 py-2 rounded-lg font-medium transition">
+                                <i className="fas fa-sign-out-alt mr-1"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Stats Summary */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                            <div className="text-xs text-slate-500 uppercase font-semibold">Total Users</div>
+                            <div className="text-2xl font-bold text-slate-800 mt-1">{users.length}</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                            <div className="text-xs text-slate-500 uppercase font-semibold">Admins</div>
+                            <div className="text-2xl font-bold text-purple-600 mt-1">{users.filter(u => u.isAdmin).length}</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                            <div className="text-xs text-slate-500 uppercase font-semibold">Team Leads</div>
+                            <div className="text-2xl font-bold text-blue-600 mt-1">{users.filter(u => u.teamLead).length}</div>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                            <div className="text-xs text-slate-500 uppercase font-semibold">Members</div>
+                            <div className="text-2xl font-bold text-slate-600 mt-1">{users.filter(u => !u.isAdmin && !u.teamLead).length}</div>
+                        </div>
+                    </div>
+
+                    {/* Add/Edit Form */}
+                    {(showAddForm || editingUser) && (
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 fade-in">
+                            <h3 className="font-bold text-slate-800 mb-4">
+                                {editingUser ? 'Edit User' : 'Add New User'}
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1">Full Name</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.full_name} 
+                                        onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                                        className="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1">Email</label>
+                                    <input 
+                                        type="email" 
+                                        value={formData.email} 
+                                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                                        className="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1">Role</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.role} 
+                                        onChange={(e) => setFormData({...formData, role: e.target.value})}
+                                        className="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        placeholder="e.g., Developer, Designer"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1">Department</label>
+                                    <select 
+                                        value={formData.department_id} 
+                                        onChange={(e) => setFormData({...formData, department_id: parseInt(e.target.value)})}
+                                        className="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    >
+                                        <option value="">Select Department</option>
+                                        {DEPARTMENTS.map(dept => (
+                                            <option key={dept.department_id} value={dept.department_id}>{dept.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={formData.isAdmin} 
+                                            onChange={(e) => setFormData({...formData, isAdmin: e.target.checked})}
+                                            className="rounded border-slate-300"
+                                        />
+                                        Admin
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={formData.teamLead} 
+                                            onChange={(e) => setFormData({...formData, teamLead: e.target.checked})}
+                                            className="rounded border-slate-300"
+                                        />
+                                        Team Lead
+                                    </label>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 mb-1">Password</label>
+                                    <input 
+                                        type="text" 
+                                        value={formData.password} 
+                                        onChange={(e) => setFormData({...formData, password: e.target.value})}
+                                        className="w-full p-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex gap-3 mt-4">
+                                <button 
+                                    onClick={handleSave}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition"
+                                >
+                                    {editingUser ? 'Update' : 'Create'}
+                                </button>
+                                <button 
+                                    onClick={handleCancel}
+                                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2 rounded-lg text-sm font-medium transition"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* User Table */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                        <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                            <i className="fas fa-users text-indigo-500"></i> All Users
+                        </h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                                    <tr>
+                                        <th className="px-3 py-2.5 text-left">User</th>
+                                        <th className="px-3 py-2.5 text-left">Email</th>
+                                        <th className="px-3 py-2.5 text-left">Role</th>
+                                        <th className="px-3 py-2.5 text-left">Department</th>
+                                        <th className="px-3 py-2.5 text-left">Permissions</th>
+                                        <th className="px-3 py-2.5 text-left">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {users.map(u => (
+                                        <tr key={u.user_id} className="border-t border-slate-100 hover:bg-slate-50 transition">
+                                            <td className="px-3 py-2.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xl">{u.avatar}</span>
+                                                    <span className="font-medium text-slate-700">{u.full_name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-3 py-2.5 text-slate-600">{u.email}</td>
+                                            <td className="px-3 py-2.5 text-slate-600">{u.role}</td>
+                                            <td className="px-3 py-2.5">{getDeptName(u.department_id)}</td>
+                                            <td className="px-3 py-2.5">
+                                                {u.isAdmin && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full mr-1">Admin</span>}
+                                                {u.teamLead && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mr-1">Lead</span>}
+                                                {!u.isAdmin && !u.teamLead && <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">Member</span>}
+                                            </td>
+                                            <td className="px-3 py-2.5">
+                                                <button 
+                                                    onClick={() => handleEdit(u)}
+                                                    className="text-indigo-600 hover:text-indigo-800 mr-2 transition"
+                                                >
+                                                    <i className="fas fa-edit"></i>
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDelete(u.user_id)}
+                                                    className="text-rose-600 hover:text-rose-800 transition"
+                                                >
+                                                    <i className="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- STATS CARDS ---
+        function StatsCards({ tasks, user }) {
+            const visibleTasks = useMemo(() => getVisibleTasks(user), [tasks, user]);
+            const total = visibleTasks.length;
+            const inProgress = visibleTasks.filter(t => t.status === 'IN_PROGRESS').length;
+            const pending = visibleTasks.filter(t => t.status === 'PENDING_ACCEPTANCE').length;
+            const overdue = visibleTasks.filter(t => new Date(t.deadline) < new Date() && t.status !== 'COMPLETED').length;
+
+            const stats = [
+                { label: 'Total Tasks', value: total, icon: 'fa-tasks', color: 'text-slate-700', bg: 'bg-slate-100' },
+                { label: 'Pending Accept', value: pending, icon: 'fa-handshake', color: 'text-purple-600', bg: 'bg-purple-100' },
+                { label: 'In Progress', value: inProgress, icon: 'fa-spinner', color: 'text-blue-600', bg: 'bg-blue-100' },
+                { label: 'Overdue', value: overdue, icon: 'fa-clock', color: 'text-rose-600', bg: 'bg-rose-100' },
+            ];
+
+            return (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {stats.map((stat, idx) => (
+                        <div key={idx} className="stat-card bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-xs text-slate-500 uppercase font-semibold tracking-wider">{stat.label}</div>
+                                    <div className="text-2xl font-bold text-slate-800 mt-1">{stat.value}</div>
+                                </div>
+                                <div className={`w-10 h-10 rounded-full ${stat.bg} flex items-center justify-center`}>
+                                    <i className={`fas ${stat.icon} ${stat.color} text-lg`}></i>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        // --- TASK LIST ---
+        function TaskListView({ tasks, user }) {
+            const visibleTasks = useMemo(() => getVisibleTasks(user), [tasks, user]);
+            const [filter, setFilter] = useState('all');
+
+            const filtered = visibleTasks.filter(t => filter === 'all' || t.status === filter);
+            const sorted = [...filtered].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+            return (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                            <i className="fas fa-list-ul text-indigo-500"></i> Task List
+                        </h3>
+                        <select className="border border-slate-300 rounded-lg px-3 py-1.5 bg-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={filter} onChange={(e) => setFilter(e.target.value)}>
+                            <option value="all">All Status</option>
+                            {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+                                <tr>
+                                    <th className="px-3 py-2.5 text-left">Title</th>
+                                    <th className="px-3 py-2.5 text-left">Priority</th>
+                                    <th className="px-3 py-2.5 text-left">Status</th>
+                                    <th className="px-3 py-2.5 text-left">Assignee</th>
+                                    <th className="px-3 py-2.5 text-left">Deadline</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {sorted.map(task => {
+                                    const isOverdue = new Date(task.deadline) < new Date() && task.status !== 'COMPLETED';
+                                    const badge = PRIORITY_BADGES[task.priority_id] || PRIORITY_BADGES[1];
+                                    return (
+                                        <tr key={task.task_id} className="border-t border-slate-100 hover:bg-slate-50 transition">
+                                            <td className="px-3 py-2.5 font-medium text-slate-700">{task.title}</td>
+                                            <td className="px-3 py-2.5">
+                                                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded ${badge.bg}`}>
+                                                    <i className={`fas ${badge.icon} text-xs`}></i> {badge.label}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-2.5">
+                                                <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[task.status] || 'bg-slate-100'}`}>
+                                                    {STATUS_LABELS[task.status] || task.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-3 py-2.5">{getAssigneeName(task.assignee_id)}</td>
+                                            <td className={`px-3 py-2.5 ${isOverdue ? 'text-rose-600 font-semibold' : 'text-slate-600'}`}>
+                                                {formatDate(task.deadline)}
+                                                {isOverdue && <span className="ml-1 text-rose-500"><i className="fas fa-exclamation-triangle"></i></span>}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {sorted.length === 0 && (
+                                    <tr><td colSpan="5" className="px-3 py-8 text-center text-slate-400">
+                                        <i className="fas fa-inbox text-2xl block mb-2"></i>No tasks
+                                    </td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- PROJECT LIST ---
+        function ProjectListView({ projects, user }) {
+            const visibleProjects = useMemo(() => {
+                if (isAdmin(user)) return projects;
+                if (isTeamLead(user.user_id)) {
+                    return projects.filter(p => p.departments_involved.includes(user.department_id));
+                }
+                const userTasks = TASKS.filter(t => t.assignee_id === user.user_id);
+                const projectIds = [...new Set(userTasks.map(t => t.project_id).filter(id => id !== null))];
+                return projects.filter(p => projectIds.includes(p.project_id));
+            }, [projects, user]);
+
+            const statusColors = {
+                ACTIVE: 'bg-emerald-100 text-emerald-700',
+                PLANNING: 'bg-amber-100 text-amber-700',
+                COMPLETED: 'bg-blue-100 text-blue-700',
+                ON_HOLD: 'bg-rose-100 text-rose-700'
+            };
+
+            return (
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                    <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                        <i className="fas fa-project-diagram text-indigo-500"></i> Projects
+                        <span className="text-xs text-slate-400 font-normal ml-2">({visibleProjects.length})</span>
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {visibleProjects.map(project => {
+                            const taskCount = TASKS.filter(t => t.project_id === project.project_id).length;
+                            return (
+                                <div key={project.project_id} className="project-card bg-slate-50 rounded-lg p-4 border border-slate-200">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h4 className="font-semibold text-slate-800">{project.name}</h4>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[project.status] || 'bg-slate-100'}`}>
+                                                {project.status}
+                                            </span>
+                                        </div>
+                                        <span className="text-xs text-slate-500">{taskCount} tasks</span>
+                                    </div>
+                                    {project.description && <p className="text-xs text-slate-500 mt-1">{project.description}</p>}
+                                    <div className="flex items-center gap-2 mt-2">
+                                        <div className="w-full bg-slate-200 rounded-full h-1.5">
+                                            <div className="bg-indigo-500 h-1.5 rounded-full transition-all duration-700" style={{ width: `${project.progress}%` }}></div>
+                                        </div>
+                                        <span className="text-xs font-medium text-slate-600">{project.progress}%</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 mt-2">
+                                        {project.departments_involved.map(id => {
+                                            const dept = DEPARTMENTS.find(d => d.department_id === id);
+                                            return dept ? (
+                                                <span key={id} className={`text-[10px] bg-${dept.color}-100 text-${dept.color}-700 px-2 py-0.5 rounded-full`}>
+                                                    {dept.name}
+                                                </span>
+                                            ) : null;
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {visibleProjects.length === 0 && (
+                            <div className="col-span-2 text-center text-slate-400 py-8">
+                                <i className="fas fa-folder-open text-2xl block mb-2"></i>
+                                No projects available
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- ADMIN DASHBOARD ---
+        function AdminDashboard({ user, onLogout }) {
+            const visibleTasks = useMemo(() => getVisibleTasks(user), [user]);
+            const totalTasks = visibleTasks.length;
+            const completed = visibleTasks.filter(t => t.status === 'COMPLETED').length;
+            const completionRate = totalTasks > 0 ? Math.round((completed / totalTasks) * 100) : 0;
+
+            const deptStats = DEPARTMENTS.map(dept => ({
+                ...dept,
+                taskCount: TASKS.filter(t => t.target_department_id === dept.department_id || 
+                    USERS.find(u => u.user_id === t.assignee_id)?.department_id === dept.department_id).length
+            }));
+
+            return (
+                <div className="space-y-5">
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-wrap items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <span className="text-2xl">{user.avatar}</span> Welcome, {user.full_name}!
+                                <span className="role-badge role-admin ml-2">Admin</span>
+                            </h2>
+                            <p className="text-sm text-slate-500 mt-1">You have full visibility across all projects and teams.</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-slate-600"><i className="fas fa-users text-indigo-500 mr-1"></i> {USERS.length} Users</span>
+                            <span className="text-sm text-slate-600"><i className="fas fa-project-diagram text-indigo-500 mr-1"></i> {PROJECTS.length} Projects</span>
+                            <button onClick={onLogout} className="bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm px-4 py-2 rounded-lg font-medium transition">
+                                <i className="fas fa-sign-out-alt mr-1"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+
+                    <StatsCards tasks={TASKS} user={user} />
+
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Overall Progress</span>
+                            <span className="text-sm font-bold text-indigo-600">{completionRate}%</span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-2.5">
+                            <div className="bg-indigo-500 h-2.5 rounded-full transition-all duration-700" style={{ width: `${completionRate}%` }}></div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                        <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                            <i className="fas fa-building text-indigo-500"></i> Department Overview
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {deptStats.map(dept => (
+                                <div key={dept.department_id} className="bg-slate-50 rounded-lg p-3 text-center">
+                                    <div className={`text-sm font-semibold text-${dept.color}-700`}>{dept.name}</div>
+                                    <div className="text-2xl font-bold text-slate-700">{dept.taskCount}</div>
+                                    <div className="text-xs text-slate-400">Tasks</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <ProjectListView projects={PROJECTS} user={user} />
+                    <TaskListView tasks={TASKS} user={user} />
+                </div>
+            );
+        }
+
+        // --- LEAD DASHBOARD ---
+        function LeadDashboard({ user, onLogout }) {
+            const visibleTasks = useMemo(() => getVisibleTasks(user), [user]);
+            const totalTasks = visibleTasks.length;
+            const completed = visibleTasks.filter(t => t.status === 'COMPLETED').length;
+            const completionRate = totalTasks > 0 ? Math.round((completed / totalTasks) * 100) : 0;
+
+            const teamMembers = USERS.filter(u => u.department_id === user.department_id && u.user_id !== user.user_id);
+
+            return (
+                <div className="space-y-5">
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-wrap items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <span className="text-2xl">{user.avatar}</span> Welcome, {user.full_name}!
+                                <span className="role-badge role-lead ml-2">Team Lead</span>
+                            </h2>
+                            <p className="text-sm text-slate-500 mt-1">
+                                Managing <span className="font-semibold">{getDeptName(user.department_id)}</span> team 
+                                ({teamMembers.length + 1} members)
+                            </p>
+                        </div>
+                        <button onClick={onLogout} className="bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm px-4 py-2 rounded-lg font-medium transition">
+                            <i className="fas fa-sign-out-alt mr-1"></i> Logout
+                        </button>
+                    </div>
+
+                    <StatsCards tasks={TASKS} user={user} />
+
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Team Progress</span>
+                            <span className="text-sm font-bold text-indigo-600">{completionRate}%</span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-2.5">
+                            <div className="bg-indigo-500 h-2.5 rounded-full transition-all duration-700" style={{ width: `${completionRate}%` }}></div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                        <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                            <i className="fas fa-users text-blue-500"></i> Team Members
+                        </h3>
+                        <div className="flex flex-wrap gap-3">
+                            <div className="bg-indigo-50 rounded-lg px-4 py-2 flex items-center gap-2">
+                                <span className="text-xl">{user.avatar}</span>
+                                <div>
+                                    <div className="font-medium text-sm">{user.full_name}</div>
+                                    <div className="text-xs text-slate-500">{user.role}</div>
+                                </div>
+                                <span className="text-xs bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full">You</span>
+                            </div>
+                            {teamMembers.map(m => (
+                                <div key={m.user_id} className="bg-slate-50 rounded-lg px-4 py-2 flex items-center gap-2">
+                                    <span className="text-xl">{m.avatar}</span>
+                                    <div>
+                                        <div className="font-medium text-sm">{m.full_name}</div>
+                                        <div className="text-xs text-slate-500">{m.role}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <ProjectListView projects={PROJECTS} user={user} />
+                    <TaskListView tasks={TASKS} user={user} />
+                </div>
+            );
+        }
+
+        // --- MEMBER DASHBOARD ---
+        function MemberDashboard({ user, onLogout }) {
+            const visibleTasks = useMemo(() => getVisibleTasks(user), [user]);
+            const totalTasks = visibleTasks.length;
+            const completed = visibleTasks.filter(t => t.status === 'COMPLETED').length;
+            const completionRate = totalTasks > 0 ? Math.round((completed / totalTasks) * 100) : 0;
+
+            return (
+                <div className="space-y-5">
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-wrap items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                <span className="text-2xl">{user.avatar}</span> Welcome, {user.full_name}!
+                                <span className="role-badge role-member ml-2">Member</span>
+                            </h2>
+                            <p className="text-sm text-slate-500 mt-1">
+                                Department: <span className="font-semibold">{getDeptName(user.department_id)}</span>
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-slate-600">
+                                <i className="fas fa-tasks text-indigo-500 mr-1"></i> {totalTasks} Assigned
+                            </span>
+                            <button onClick={onLogout} className="bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm px-4 py-2 rounded-lg font-medium transition">
+                                <i className="fas fa-sign-out-alt mr-1"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+
+                    <StatsCards tasks={TASKS} user={user} />
+
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Your Progress</span>
+                            <span className="text-sm font-bold text-indigo-600">{completionRate}%</span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-2.5">
+                            <div className="bg-indigo-500 h-2.5 rounded-full transition-all duration-700" style={{ width: `${completionRate}%` }}></div>
+                        </div>
+                    </div>
+
+                    <ProjectListView projects={PROJECTS} user={user} />
+                    <TaskListView tasks={TASKS} user={user} />
+                </div>
+            );
+        }
+
+        // --- DASHBOARD ROUTER ---
+        function DashboardRouter({ user, onLogout, showToast }) {
+            // Check if user is backend admin (user_id 999)
+            if (user.user_id === 999) {
+                return <UserManagement user={user} onLogout={onLogout} showToast={showToast} />;
+            }
+            
+            if (isAdmin(user)) {
+                return <AdminDashboard user={user} onLogout={onLogout} />;
+            } else if (isTeamLead(user.user_id)) {
+                return <LeadDashboard user={user} onLogout={onLogout} />;
+            } else {
+                return <MemberDashboard user={user} onLogout={onLogout} />;
+            }
+        }
+
+        // --- MAIN APP ---
+        function App() {
+            const [currentUser, setCurrentUser] = useState(null);
+            const [toast, setToast] = useState(null);
+
+            const showToast = useCallback((message, type = 'info') => {
+                setToast({ message, type });
+            }, []);
+
+            const handleLogin = (user) => {
+                setCurrentUser(user);
+                showToast(`Welcome back, ${user.full_name}!`, 'success');
+            };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                showToast('Logged out successfully.', 'info');
+            };
+
+            if (!currentUser) {
+                return <LoginPage onLogin={handleLogin} />;
+            }
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-6">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="mb-5">
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
+                                    <i className="fas fa-tasks text-indigo-500"></i> Pragya Flow
+                                </h1>
+                                <span className={`role-badge ${isAdmin(currentUser) ? 'role-admin' : isTeamLead(currentUser.user_id) ? 'role-lead' : 'role-member'}`}>
+                                    {isAdmin(currentUser) ? 'Admin' : isTeamLead(currentUser.user_id) ? 'Team Lead' : 'Member'}
+                                </span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5">Role-based dashboard · {currentUser.full_name}</p>
+                        </div>
+
+                        <DashboardRouter user={currentUser} onLogout={handleLogout} showToast={showToast} />
+
+                        {toast && (
+                            <Toast 
+                                message={toast.message} 
+                                type={toast.type} 
+                                onClose={() => setToast(null)} 
+                            />
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

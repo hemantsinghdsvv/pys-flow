@@ -1,0 +1,24 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/login-reminder",
+      "schedule": "0 4 * * 1-5"
+    },
+    {
+      "path": "/api/cron/worklog-reminder",
+      "schedule": "0 11 * * 1-5"
+    },
+    {
+      "path": "/api/cron/submission-reminder",
+      "schedule": "0 12 * * 1-5"
+    },
+    {
+      "path": "/api/cron/mark-absences",
+      "schedule": "30 12 * * 1-5"
+    },
+    {
+      "path": "/api/cron/snapshots",
+      "schedule": "0 18 * * 1-5"
+    }
+  ]
+}

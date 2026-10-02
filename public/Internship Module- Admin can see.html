@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pragya Yog School — Internship Planner & Marks</title>
+<style>
+    :root {
+        --primary: #d97706;
+        --primary-hover: #b45309;
+        --primary-soft: #fffbeb;
+        --primary-border: #fde68a;
+        --bg: #f8fafc;
+        --card-bg: #ffffff;
+        --text: #1e293b;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 20px 40px -12px rgba(0, 0, 0, 0.25);
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg); color: var(--text);
+        margin: 0; padding: 24px; -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 1180px; margin: 0 auto; }
+
+    /* ---------- Header ---------- */
+    .app-header {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 16px; flex-wrap: wrap; margin-bottom: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo {
+        width: 54px; height: 54px; flex: 0 0 auto; border-radius: 16px;
+        background: linear-gradient(135deg, var(--primary), #f59e0b);
+        color: #fff; display: grid; place-items: center;
+        font-size: 26px; line-height: 1; box-shadow: var(--shadow);
+    }
+    .brand h1 { margin: 0; font-size: 1.28rem; letter-spacing: -0.01em; }
+    .brand p { margin: 3px 0 0; font-size: 0.84rem; color: var(--muted); }
+
+    .btn {
+        font-family: inherit; font-size: 0.85rem; font-weight: 600;
+        padding: 9px 16px; border-radius: 10px;
+        border: 1px solid var(--border); background: var(--card-bg);
+        color: var(--muted); cursor: pointer; transition: all 0.18s ease;
+    }
+    .btn:hover { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
+    .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
+    .btn.ghost { background: #fff; }
+    .btn.ghost:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+
+    /* ---------- View nav ---------- */
+    .view-nav {
+        display: flex; gap: 6px; margin-bottom: 20px;
+        background: #fff; padding: 6px; border-radius: 13px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        width: fit-content; max-width: 100%; flex-wrap: wrap;
+    }
+    .view-nav button {
+        font-family: inherit; font-size: 0.88rem; font-weight: 600;
+        padding: 9px 22px; border: none; border-radius: 9px;
+        background: transparent; color: var(--muted);
+        cursor: pointer; transition: all 0.15s ease;
+    }
+    .view-nav button:hover { color: var(--primary); }
+    .view-nav button.active {
+        background: var(--primary); color: #fff;
+        box-shadow: 0 2px 6px -1px rgba(217, 119, 6, 0.45);
+    }
+
+    /* ---------- Cards ---------- */
+    .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+    }
+
+    /* ---------- Overall progress ---------- */
+    .overall { padding: 20px 22px; margin-bottom: 16px; }
+    .overall-top {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 16px; margin-bottom: 14px;
+    }
+    .overall-top h2 { margin: 0; font-size: 1rem; }
+    .overall-top p { margin: 4px 0 0; font-size: 0.85rem; color: var(--muted); }
+    .pct-big {
+        font-size: 1.9rem; font-weight: 700; color: var(--primary);
+        line-height: 1; letter-spacing: -0.02em;
+    }
+    .bar { height: 9px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+    .bar-fill {
+        height: 100%; width: 0%; border-radius: 999px;
+        background: linear-gradient(90deg, var(--primary), #f59e0b);
+        transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ---------- Stats ---------- */
+    .stats {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 14px; margin-bottom: 16px;
+    }
+    .stat { padding: 16px 18px; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .stat-label {
+        margin-top: 6px; font-size: 0.7rem; font-weight: 700;
+        letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+    }
+    .stat-value.done { color: #059669; }
+    .stat-value.left { color: var(--primary); }
+    .stat-value.assigned { color: #2563eb; }
+    .stat-value.marks { color: #7c3aed; }
+
+    /* ---------- Team strip ---------- */
+    .team { padding: 18px 20px; margin-bottom: 16px; }
+    .team-head {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .team-head h2 { margin: 0; font-size: 0.95rem; }
+    .team-head span { font-size: 0.78rem; color: var(--muted); }
+    .intern-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px;
+    }
+    .intern-chip {
+        padding: 11px 13px; border: 1px solid var(--border);
+        border-radius: 11px; background: #fcfdfe;
+    }
+    .intern-chip-name {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 8px; font-size: 0.86rem; font-weight: 700; margin-bottom: 7px;
+    }
+    .intern-chip-pct { font-size: 0.74rem; color: var(--muted); font-weight: 700; }
+    .intern-chip .bar { height: 6px; }
+    .intern-chip-marks {
+        font-size: 0.72rem; color: #7c3aed; font-weight: 700;
+        margin-top: 6px; display: flex; align-items: center; gap: 4px;
+    }
+
+    /* ---------- Filters ---------- */
+    .filters {
+        padding: 14px 18px; margin-bottom: 16px;
+        display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1 1 140px; min-width: 0; }
+    .filter-group label {
+        font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+        text-transform: uppercase; color: var(--muted);
+    }
+    .filter-group select {
+        font-family: inherit; font-size: 0.85rem; padding: 8px 12px;
+        border: 1px solid var(--border); border-radius: 9px;
+        background: #fff; color: var(--text); cursor: pointer; transition: all 0.15s ease;
+    }
+    .filter-group select:focus {
+        outline: none; border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.13);
+    }
+    .filter-clear {
+        font-family: inherit; font-size: 0.8rem; font-weight: 600;
+        padding: 8px 14px; border-radius: 9px;
+        border: 1px solid var(--border); background: #fff; color: var(--muted);
+        cursor: pointer; transition: all 0.15s ease;
+    }
+    .filter-clear:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+
+    /* ---------- Tabs ---------- */
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .tab {
+        font-family: inherit; font-size: 0.85rem; font-weight: 600;
+        padding: 9px 18px; border-radius: 999px;
+        border: 1px solid var(--border); background: var(--card-bg);
+        color: #475569; cursor: pointer; transition: all 0.18s ease;
+    }
+    .tab:hover { border-color: var(--primary); color: var(--primary); }
+    .tab.active {
+        background: var(--primary); border-color: var(--primary); color: #fff;
+        box-shadow: 0 3px 8px -2px rgba(217, 119, 6, 0.5);
+    }
+
+    /* ---------- Month ---------- */
+    .month { padding: 20px 22px; margin-bottom: 20px; }
+    .month-head {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 16px; flex-wrap: wrap; margin-bottom: 14px;
+    }
+    .month-title { margin: 0; font-size: 1.08rem; letter-spacing: -0.01em; }
+    .month-sub { margin: 5px 0 0; font-size: 0.84rem; color: var(--muted); max-width: 62ch; }
+    .month-pct {
+        text-align: right; font-size: 1.15rem; font-weight: 700;
+        color: var(--primary); line-height: 1.1; white-space: nowrap;
+    }
+    .month-pct span { display: block; font-size: 0.72rem; font-weight: 600; color: var(--muted); margin-top: 3px; }
+
+    /* ---------- Week ---------- */
+    .week {
+        border: 1px solid var(--border); border-radius: 12px;
+        padding: 14px 16px; margin-top: 14px; background: #fcfdfe;
+    }
+    .week-head {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .week-title-wrap { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .week-title { font-size: 0.92rem; font-weight: 700; }
+    .week-focus {
+        font-size: 0.72rem; font-weight: 600; color: var(--primary);
+        background: var(--primary-soft); border: 1px solid var(--primary-border);
+        padding: 2px 9px; border-radius: 999px;
+    }
+    .week-count { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+    .week-dates {
+        font-size: 0.72rem; color: #94a3b8; font-weight: 600;
+        padding: 1px 6px; background: #f1f5f9; border-radius: 5px;
+    }
+
+    /* ---------- Task ---------- */
+    .task {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 9px 10px; border-radius: 9px; transition: background 0.15s ease;
+    }
+    .task:hover { background: #f8fafc; }
+    .task.overdue { background: #fef2f2; }
+    .task.overdue:hover { background: #fee2e2; }
+    .task input[type="checkbox"] {
+        width: 18px; height: 18px; margin: 2px 0 0; flex: 0 0 auto;
+        accent-color: var(--primary); cursor: pointer;
+    }
+    .task-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .task-text {
+        font-size: 0.89rem; line-height: 1.45; cursor: pointer; transition: color 0.15s ease;
+    }
+    .task.done .task-text { text-decoration: line-through; color: #94a3b8; }
+    .task-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    .badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 0.68rem; font-weight: 700;
+        padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+    }
+    .badge-intern { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .badge-intern.multi { background: #eef2ff; color: #4338ca; border-color: #c7d2fe; }
+    .badge-staff { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .badge-empty { background: #f8fafc; color: #94a3b8; border: 1px dashed #cbd5e1; }
+    .badge-type {
+        color: #fff; padding: 2px 9px; border-radius: 999px;
+        font-size: 0.68rem; font-weight: 700; white-space: nowrap;
+    }
+    .badge-date {
+        background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;
+    }
+    .badge-date.rescheduled {
+        background: #fef3c7; color: #92400e; border-color: #fde68a;
+    }
+    .badge-date.overdue {
+        background: #fee2e2; color: #991b1b; border-color: #fecaca;
+    }
+    .badge-marks {
+        background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe;
+    }
+    .badge-marks.perfect {
+        background: #ede9fe; color: #5b21b6; border-color: #c4b5fd;
+    }
+
+    .icon-btn {
+        border: none; background: transparent; color: #94a3b8;
+        font-size: 1rem; line-height: 1; padding: 6px 8px;
+        border-radius: 8px; cursor: pointer; flex: 0 0 auto;
+        opacity: 0.4; transition: all 0.15s ease;
+    }
+    .task:hover .icon-btn { opacity: 1; }
+    .icon-btn:hover { color: var(--primary); background: var(--primary-soft); }
+    .icon-btn.del:hover { color: #dc2626; background: #fef2f2; }
+    .icon-btn:focus-visible { opacity: 1; outline: 2px solid var(--primary); outline-offset: 1px; }
+
+    /* ---------- Add form ---------- */
+    .add-form { display: flex; gap: 8px; margin-top: 8px; }
+    .add-form input {
+        flex: 1; min-width: 0; font-family: inherit; font-size: 0.85rem;
+        padding: 8px 12px; border: 1px dashed #cbd5e1; border-radius: 9px;
+        background: #fff; color: var(--text); transition: all 0.15s ease;
+    }
+    .add-form input::placeholder { color: #94a3b8; }
+    .add-form input:focus {
+        outline: none; border-style: solid; border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.13);
+    }
+    .add-form button {
+        font-family: inherit; font-size: 0.85rem; font-weight: 600;
+        padding: 8px 16px; border: none; border-radius: 9px;
+        background: var(--primary); color: #fff; cursor: pointer; transition: background 0.18s ease;
+    }
+    .add-form button:hover { background: var(--primary-hover); }
+
+    /* ---------- Empty note ---------- */
+    .empty-note {
+        text-align: center; padding: 40px 22px;
+        color: var(--muted); font-size: 0.9rem;
+        border: 1px dashed var(--border); border-radius: 14px;
+        background: #fff; margin-bottom: 20px;
+    }
+    .empty-note strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 1.02rem; }
+
+    /* ================= ROSTER VIEW ================= */
+    .roster-grid {
+        display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px;
+    }
+    @media (max-width: 1020px) { .roster-grid { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 680px)  { .roster-grid { grid-template-columns: 1fr; } }
+
+    .roster-panel { padding: 20px 22px; }
+    .roster-panel-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .roster-panel-head .dot {
+        width: 9px; height: 9px; border-radius: 50%; background: var(--primary); flex: 0 0 auto;
+    }
+    .roster-panel-head .dot.green { background: #10b981; }
+    .roster-panel-head .dot.purple { background: #8b5cf6; }
+    .roster-panel h2 { margin: 0; font-size: 1rem; }
+    .roster-panel .sub { margin: 0 0 16px 19px; font-size: 0.81rem; color: var(--muted); }
+
+    .roster-add { display: flex; gap: 8px; margin-bottom: 14px; }
+    .roster-add input {
+        flex: 1; min-width: 0; font-family: inherit; font-size: 0.86rem;
+        padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px;
+        background: #fff; color: var(--text); transition: all 0.15s ease;
+    }
+    .roster-add input:focus {
+        outline: none; border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.13);
+    }
+    .roster-add button {
+        font-family: inherit; font-size: 0.85rem; font-weight: 600;
+        padding: 9px 18px; border: none; border-radius: 10px;
+        background: var(--primary); color: #fff; cursor: pointer;
+        transition: background 0.18s ease; white-space: nowrap;
+    }
+    .roster-add button:hover { background: var(--primary-hover); }
+
+    .roster-list { display: flex; flex-direction: column; gap: 8px; }
+    .roster-item {
+        display: flex; align-items: center; gap: 11px;
+        padding: 10px 12px; border: 1px solid var(--border);
+        border-radius: 11px; background: #fcfdfe; transition: all 0.15s ease;
+    }
+    .roster-item:hover { border-color: var(--primary-border); background: var(--primary-soft); }
+    .avatar {
+        width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+        display: grid; place-items: center; font-size: 0.76rem; font-weight: 700;
+        color: #fff; letter-spacing: 0.02em;
+        background: linear-gradient(135deg, var(--primary), #f59e0b);
+    }
+    .avatar.staff { background: linear-gradient(135deg, #059669, #10b981); }
+    .avatar.type-av { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+    .roster-info { flex: 1; min-width: 0; }
+    .roster-name { font-size: 0.88rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .roster-count { font-size: 0.72rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+    .roster-actions { display: flex; gap: 2px; flex: 0 0 auto; }
+
+    .roster-empty {
+        text-align: center; padding: 26px 16px; font-size: 0.84rem;
+        color: var(--muted); border: 1px dashed var(--border); border-radius: 11px;
+    }
+
+    .color-dot {
+        width: 16px; height: 16px; border-radius: 50%; flex: 0 0 auto;
+        border: 2px solid #fff; box-shadow: 0 0 0 1px var(--border);
+    }
+
+    /* ================= PROFILES VIEW ================= */
+    .profile-controls {
+        padding: 16px 20px; margin-bottom: 16px;
+        display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+    }
+    .seg {
+        display: flex; background: #f1f5f9; border-radius: 10px;
+        padding: 3px; gap: 2px; flex: 0 0 auto;
+    }
+    .seg button {
+        font-family: inherit; font-size: 0.83rem; font-weight: 600;
+        padding: 8px 18px; border: none; border-radius: 8px;
+        background: transparent; color: var(--muted);
+        cursor: pointer; transition: all 0.15s ease;
+    }
+    .seg button:hover { color: var(--primary); }
+    .seg button.active {
+        background: #fff; color: var(--primary);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .single-picker { display: flex; align-items: center; gap: 10px; flex: 1 1 240px; min-width: 0; }
+    .single-picker label {
+        font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+        text-transform: uppercase; color: var(--muted); white-space: nowrap;
+    }
+    .single-picker select {
+        flex: 1; min-width: 0; font-family: inherit; font-size: 0.88rem;
+        padding: 9px 12px; border: 1px solid var(--border); border-radius: 10px;
+        background: #fff; color: var(--text); cursor: pointer; transition: all 0.15s ease;
+    }
+    .single-picker select:focus {
+        outline: none; border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.13);
+    }
+
+    .batch-bar {
+        padding: 14px 20px; margin-bottom: 16px;
+        display: flex; flex-wrap: wrap; gap: 9px; align-items: center;
+    }
+    .batch-bar .batch-label {
+        font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+        text-transform: uppercase; color: var(--muted); margin-right: 4px;
+    }
+    .batch-chip {
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 7px 15px; border: 1px solid var(--border); border-radius: 999px;
+        background: #fff; font-size: 0.83rem; font-weight: 600; color: #475569;
+        cursor: pointer; transition: all 0.15s ease; font-family: inherit;
+    }
+    .batch-chip:hover { border-color: var(--primary); color: var(--primary); }
+    .batch-chip.on {
+        background: var(--primary); border-color: var(--primary); color: #fff;
+        box-shadow: 0 2px 7px -1px rgba(217, 119, 6, 0.5);
+    }
+    .batch-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+    .batch-chip .mini-av {
+        width: 20px; height: 20px; border-radius: 50%;
+        display: grid; place-items: center; font-size: 0.6rem; font-weight: 700;
+        background: #e2e8f0; color: #475569;
+    }
+    .batch-chip.on .mini-av { background: rgba(255,255,255,0.3); color: #fff; }
+
+    .profile-grid { display: grid; gap: 16px; }
+    .profile-grid.cols-1 { grid-template-columns: 1fr; }
+    .profile-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .profile-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .profile-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    @media (max-width: 1020px) {
+        .profile-grid.cols-3, .profile-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 620px) {
+        .profile-grid[class*="cols-"] { grid-template-columns: 1fr; }
+    }
+
+    .pcard { overflow: hidden; display: flex; flex-direction: column; }
+    .pcard-head {
+        padding: 16px 18px 14px; border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg, #fff, #fcfdfe);
+    }
+    .pcard-top { display: flex; align-items: center; gap: 11px; margin-bottom: 11px; }
+    .pcard-name {
+        flex: 1; min-width: 0; font-size: 0.96rem; font-weight: 700;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .pcard-stat { font-size: 0.76rem; font-weight: 700; color: var(--muted); white-space: nowrap; }
+    .pcard-stat b { color: var(--primary); font-size: 0.86rem; }
+
+    .pcard-marks-row {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; margin-bottom: 9px;
+    }
+    .pcard-marks {
+        display: flex; align-items: baseline; gap: 3px;
+        font-size: 1.25rem; font-weight: 800; color: #7c3aed;
+        line-height: 1;
+    }
+    .pcard-marks small {
+        font-size: 0.72rem; font-weight: 600; color: var(--muted);
+        margin-left: 4px;
+    }
+    .pcard-marks-denom { color: #c4b5fd; font-weight: 700; font-size: 0.9rem; }
+    .pcard-task-stat {
+        font-size: 0.74rem; font-weight: 700; color: var(--muted);
+    }
+    .pcard-task-stat b { color: var(--text); }
+
+    .pcard-body { padding: 8px 10px 12px; overflow-y: auto; max-height: 540px; flex: 1; }
+
+    .pgroup { margin-bottom: 6px; }
+    .pgroup-title {
+        font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em;
+        text-transform: uppercase; color: var(--muted);
+        padding: 12px 8px 6px; border-bottom: 1px dashed var(--border); margin-bottom: 4px;
+    }
+    .pgroup:first-child .pgroup-title { padding-top: 4px; }
+
+    .ptask {
+        display: flex; gap: 8px; padding: 7px 8px;
+        border-radius: 8px; transition: background 0.15s ease;
+    }
+    .ptask:hover { background: #f8fafc; }
+    .ptask.overdue { background: #fef2f2; }
+    .ptask input[type="checkbox"] {
+        width: 16px; height: 16px; margin: 2px 0 0; flex: 0 0 auto;
+        accent-color: var(--primary); cursor: pointer;
+    }
+    .ptask-main { flex: 1; min-width: 0; }
+    .ptask-text { font-size: 0.82rem; line-height: 1.42; cursor: pointer; }
+    .ptask.done .ptask-text { text-decoration: line-through; color: #94a3b8; }
+    .ptask-meta { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+    .ptask-meta .badge { font-size: 0.64rem; padding: 1px 7px; }
+
+    .ptask-empty {
+        text-align: center; padding: 34px 16px; font-size: 0.85rem; color: var(--muted);
+    }
+
+    /* ---------- Modal ---------- */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+        -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+        display: none; place-items: center; z-index: 100; padding: 20px;
+    }
+    .modal-overlay.open { display: grid; }
+    .modal {
+        background: #fff; border-radius: 16px; width: 100%; max-width: 580px;
+        padding: 24px; box-shadow: var(--shadow-lg);
+        animation: pop 0.22s cubic-bezier(0.34, 1.3, 0.64, 1);
+        max-height: calc(100vh - 40px); overflow-y: auto;
+    }
+    @keyframes pop {
+        from { transform: scale(0.95) translateY(8px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .modal h3 { margin: 0 0 4px; font-size: 1.1rem; }
+    .modal .modal-sub { margin: 0 0 18px; font-size: 0.82rem; color: var(--muted); }
+    .modal-field { margin-bottom: 15px; }
+    .modal-field label {
+        display: block; font-size: 0.72rem; font-weight: 700;
+        letter-spacing: 0.05em; text-transform: uppercase;
+        color: var(--muted); margin-bottom: 6px;
+    }
+    .modal-field textarea,
+    .modal-field input[type="text"],
+    .modal-field input[type="number"],
+    .modal-field input[type="date"],
+    .modal-field input[type="time"],
+    .modal-field select {
+        width: 100%; font-family: inherit; font-size: 0.9rem;
+        padding: 10px 12px; border: 1px solid var(--border);
+        border-radius: 10px; background: #fff; color: var(--text);
+        transition: all 0.15s ease; resize: vertical;
+    }
+    .modal-field textarea { min-height: 66px; line-height: 1.5; }
+    .modal-field input:focus,
+    .modal-field textarea:focus,
+    .modal-field select:focus {
+        outline: none; border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.13);
+    }
+    .modal-hint { font-size: 0.72rem; color: #94a3b8; margin-top: 5px; }
+
+    .modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 520px) { .modal-row { grid-template-columns: 1fr; } }
+
+    .field-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+    .field-head label { margin-bottom: 0; }
+    .mini-link {
+        font-family: inherit; font-size: 0.72rem; font-weight: 700;
+        background: none; border: none; color: var(--primary);
+        cursor: pointer; padding: 2px 4px; border-radius: 5px;
+    }
+    .mini-link:hover { background: var(--primary-soft); }
+
+    .intern-picker {
+        display: flex; flex-wrap: wrap; gap: 7px; padding: 11px;
+        border: 1px solid var(--border); border-radius: 10px;
+        background: #fcfdfe; max-height: 158px; overflow-y: auto;
+    }
+    .pick-chip {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px;
+        background: #fff; font-size: 0.8rem; font-weight: 600;
+        cursor: pointer; transition: all 0.15s ease; user-select: none;
+    }
+    .pick-chip:hover { border-color: var(--primary); }
+    .pick-chip input {
+        width: 14px; height: 14px; accent-color: var(--primary);
+        cursor: pointer; margin: 0;
+    }
+    .pick-chip.on {
+        background: var(--primary-soft); border-color: var(--primary-border);
+        color: var(--primary-hover);
+    }
+    .picker-empty { font-size: 0.78rem; color: var(--muted); padding: 4px; }
+
+    .marks-row {
+        display: flex; align-items: center; gap: 10px;
+    }
+    .marks-row input { flex: 1; }
+    .marks-denom {
+        font-size: 0.9rem; font-weight: 700; color: var(--muted);
+        white-space: nowrap; padding: 0 4px;
+    }
+
+    .modal-actions {
+        display: flex; gap: 9px; justify-content: flex-end;
+        margin-top: 22px; flex-wrap: wrap;
+    }
+    .modal-actions .btn.danger {
+        margin-right: auto; border-color: #fecaca; color: #dc2626; background: #fef2f2;
+    }
+    .modal-actions .btn.danger:hover { background: #fee2e2; border-color: #fca5a5; }
+
+    /* ---------- Footer / Toast ---------- */
+    .foot { text-align: center; font-size: 0.78rem; color: var(--muted); padding: 10px 0 4px; }
+    .toast {
+        position: fixed; left: 50%; bottom: 26px;
+        transform: translate(-50%, 140%);
+        background: #1e293b; color: #fff; font-size: 0.88rem; font-weight: 600;
+        padding: 13px 22px; border-radius: 12px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+        transition: transform 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
+        z-index: 200; max-width: calc(100vw - 40px); text-align: center;
+    }
+    .toast.show { transform: translate(-50%, 0); }
+
+    @media (max-width: 640px) {
+        body { padding: 16px; }
+        .month, .overall, .team, .roster-panel { padding: 16px; }
+        .brand h1 { font-size: 1.1rem; }
+        .pct-big { font-size: 1.5rem; }
+        .icon-btn { opacity: 1; }
+        .filters, .profile-controls, .batch-bar { padding: 12px 14px; }
+        .view-nav button { padding: 8px 15px; font-size: 0.82rem; }
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <header class="app-header">
+        <div class="brand">
+            <div class="logo">ॐ</div>
+            <div>
+                <h1>Pragya Yog School</h1>
+                <p>Internship Planner · Tasks · Marks</p>
+            </div>
+        </div>
+        <button class="btn" id="resetBtn" type="button">Reset All</button>
+    </header>
+
+    <nav class="view-nav" id="viewNav">
+        <button type="button" data-view="planner" class="active">📋 Planner</button>
+        <button type="button" data-view="profiles">👥 Intern Profiles</button>
+        <button type="button" data-view="roster">🗂️ Roster & Types</button>
+    </nav>
+
+    <!-- ============ PLANNER VIEW ============ -->
+    <div id="viewPlanner">
+
+        <section class="overall card">
+            <div class="overall-top">
+                <div>
+                    <h2>Overall Progress</h2>
+                    <p id="overallLabel">0 of 0 tasks completed</p>
+                </div>
+                <div class="pct-big" id="statPct">0%</div>
+            </div>
+            <div class="bar"><div class="bar-fill" id="overallFill"></div></div>
+        </section>
+
+        <section class="stats">
+            <div class="stat card">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat card">
+                <div class="stat-value done" id="statDone">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat card">
+                <div class="stat-value left" id="statLeft">0</div>
+                <div class="stat-label">Remaining</div>
+            </div>
+            <div class="stat card">
+                <div class="stat-value marks" id="statMarks">0</div>
+                <div class="stat-label">Marks Awarded</div>
+            </div>
+        </section>
+
+        <section class="team card" id="teamCard" style="display:none;">
+            <div class="team-head">
+                <h2>Team Progress & Marks</h2>
+                <span>Completion and marks across all months</span>
+            </div>
+            <div class="intern-grid" id="internGrid"></div>
+        </section>
+
+        <section class="filters card">
+            <div class="filter-group">
+                <label for="filterIntern">Intern</label>
+                <select id="filterIntern"><option value="">All interns</option></select>
+            </div>
+            <div class="filter-group">
+                <label for="filterStaff">Staff Checker</label>
+                <select id="filterStaff"><option value="">All staff</option></select>
+            </div>
+            <div class="filter-group">
+                <label for="filterType">Task Type</label>
+                <select id="filterType"><option value="">All types</option></select>
+            </div>
+            <div class="filter-group">
+                <label for="filterStatus">Status</label>
+                <select id="filterStatus">
+                    <option value="all">All tasks</option>
+                    <option value="pending">Pending only</option>
+                    <option value="done">Completed only</option>
+                    <option value="overdue">Overdue only</option>
+                    <option value="rescheduled">Rescheduled</option>
+                </select>
+            </div>
+            <button class="filter-clear" id="clearFilters" type="button">Clear</button>
+        </section>
+
+        <nav class="tabs" id="tabs"></nav>
+
+        <main id="months"></main>
+    </div>
+
+    <!-- ============ PROFILES VIEW ============ -->
+    <div id="viewProfiles" hidden>
+
+        <section class="profile-controls card">
+            <div class="seg" id="profileModeSeg">
+                <button type="button" data-mode="single" class="active">Single Intern</button>
+                <button type="button" data-mode="batch">Batch (up to 4)</button>
+            </div>
+            <div class="single-picker" id="singlePicker">
+                <label for="singleSelect">Intern</label>
+                <select id="singleSelect"></select>
+            </div>
+        </section>
+
+        <section class="batch-bar card" id="batchBar" hidden>
+            <span class="batch-label">Select interns</span>
+            <div id="batchChips" style="display:flex; flex-wrap:wrap; gap:9px;"></div>
+            <button class="btn ghost" id="batchAllBtn" type="button" style="margin-left:auto;">Select first 4</button>
+        </section>
+
+        <div class="profile-grid cols-1" id="profileGrid"></div>
+    </div>
+
+    <!-- ============ ROSTER VIEW ============ -->
+    <div id="viewRoster" hidden>
+        <div class="roster-grid">
+            <section class="roster-panel card">
+                <div class="roster-panel-head">
+                    <span class="dot"></span>
+                    <h2>Interns</h2>
+                </div>
+                <p class="sub">Add interns to make them available for task assignment.</p>
+
+                <form class="roster-add" id="addInternForm">
+                    <input type="text" id="newInternName" placeholder="Full name, e.g. Priya Sharma" autocomplete="off">
+                    <button type="submit">Add</button>
+                </form>
+
+                <div class="roster-list" id="internRosterList"></div>
+            </section>
+
+            <section class="roster-panel card">
+                <div class="roster-panel-head">
+                    <span class="dot green"></span>
+                    <h2>Staff / Checkers</h2>
+                </div>
+                <p class="sub">Staff who will check tasks and award marks.</p>
+
+                <form class="roster-add" id="addStaffForm">
+                    <input type="text" id="newStaffName" placeholder="Full name, e.g. Acharya Anand" autocomplete="off">
+                    <button type="submit">Add</button>
+                </form>
+
+                <div class="roster-list" id="staffRosterList"></div>
+            </section>
+
+            <section class="roster-panel card">
+                <div class="roster-panel-head">
+                    <span class="dot purple"></span>
+                    <h2>Task Types</h2>
+                </div>
+                <p class="sub">Orientation, performance, assessment — your own categories.</p>
+
+                <form class="roster-add" id="addTypeForm">
+                    <input type="text" id="newTypeName" placeholder="e.g. Performance" autocomplete="off">
+                    <button type="submit">Add</button>
+                </form>
+
+                <div class="roster-list" id="typeRosterList"></div>
+            </section>
+        </div>
+    </div>
+
+    <p class="foot">Fixed task list · reschedulable · marks out of 10 per task · auto-saved.</p>
+</div>
+
+<!-- ============ EDIT MODAL ============ -->
+<div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+        <h3 id="modalTitle">Edit Task</h3>
+        <p class="modal-sub" id="modalSub">Tasks are fixed — you can reschedule, assign and mark them.</p>
+
+        <div class="modal-field">
+            <label for="editText">Task description</label>
+            <textarea id="editText" placeholder="Describe the task…"></textarea>
+        </div>
+
+        <div class="modal-row">
+            <div class="modal-field">
+                <div class="field-head">
+                    <label for="editType">Task type</label>
+                    <button type="button" class="mini-link" id="addTypeQuick">+ New type</button>
+                </div>
+                <select id="editType"></select>
+            </div>
+            <div class="modal-field">
+                <label for="editStaff">Staff checker</label>
+                <select id="editStaff"></select>
+            </div>
+        </div>
+
+        <div class="modal-row">
+            <div class="modal-field">
+                <label for="editDate">Scheduled date</label>
+                <input type="date" id="editDate">
+                <div class="modal-hint" id="editDateHint">Change this to move the task.</div>
+            </div>
+            <div class="modal-field">
+                <label for="editTime">Scheduled time</label>
+                <input type="time" id="editTime">
+            </div>
+        </div>
+
+        <div class="modal-field">
+            <div class="field-head">
+                <label>Assigned interns</label>
+                <span>
+                    <button type="button" class="mini-link" id="pickAll">Select all</button>
+                    <button type="button" class="mini-link" id="pickNone">Clear</button>
+                </span>
+            </div>
+            <div class="intern-picker" id="internPicker"></div>
+            <div class="modal-hint">Select one for an individual task, or several for a shared task.</div>
+        </div>
+
+        <div class="modal-field" id="marksField">
+            <label for="editMarks">Marks obtained</label>
+            <div class="marks-row">
+                <input type="number" id="editMarks" min="0" max="10" step="1" placeholder="—">
+                <span class="marks-denom">/ 10</span>
+            </div>
+            <div class="modal-hint" id="marksHint">Each task is worth 10 marks. Marks count only when the task is complete.</div>
+        </div>
+
+        <div class="modal-field">
+            <label for="editMarkedBy">Marks awarded by</label>
+            <select id="editMarkedBy"></select>
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn danger" id="modalDelete" type="button">Delete</button>
+            <button class="btn" id="modalCancel" type="button">Cancel</button>
+            <button class="btn primary" id="modalSave" type="button">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ================= PLAN DATA (fixed task list) ================= */
+    const PLAN = [
+        {
+            id: 'm1', title: 'Month 1 — Foundation & Observation',
+            subtitle: 'Build your base: philosophy, asana fundamentals and classroom observation.',
+            weeks: [
+                { id: 'm1w1', title: 'Week 1', focus: 'Orientation', tasks: [
+                    'Attend orientation — school philosophy, ethics and daily schedule',
+                    'Study the Yamas and Niyamas with examples from daily life',
+                    'Observe 3 Hatha yoga classes and take structured notes',
+                    'Memorise the 12 steps of Surya Namaskar',
+                    'Start an internship journal with daily reflections'
+                ]},
+                { id: 'm1w2', title: 'Week 2', focus: 'Asana Basics', tasks: [
+                    'Practise and learn 20 standing asanas with Sanskrit names',
+                    'Study alignment cues for Tadasana, Vrikshasana and Trikonasana',
+                    'Assist the teacher in one class (props and setup)',
+                    'Learn basic anatomy: spine, major joints and muscle groups'
+                ]},
+                { id: 'm1w3', title: 'Week 3', focus: 'Breath & Pranayama', tasks: [
+                    'Learn Nadi Shodhana, Bhramari and Kapalbhati fundamentals',
+                    'Establish a daily 15-minute personal pranayama routine',
+                    'Observe a pranayama class and note the teaching language',
+                    'Study contraindications and safety for breathing practices'
+                ]},
+                { id: 'm1w4', title: 'Week 4', focus: 'Review & Assessment', tasks: [
+                    'Lead a 15-minute warm-up for a peer group',
+                    'Complete the Month 1 written assessment',
+                    'Submit the Month 1 reflection report to your mentor',
+                    'Set clear personal goals for Month 2'
+                ]}
+            ]
+        },
+        {
+            id: 'm2', title: 'Month 2 — Practice & Assisting',
+            subtitle: 'Move from student to assistant: sequencing, cueing and hands-on support.',
+            weeks: [
+                { id: 'm2w1', title: 'Week 5', focus: 'Sequencing', tasks: [
+                    'Learn the structure of a 60-minute Hatha class',
+                    'Study peak pose, counter pose and compensation logic',
+                    'Build 2 sample sequences and present them for feedback'
+                ]},
+                { id: 'm2w2', title: 'Week 6', focus: 'Teaching Skills', tasks: [
+                    'Practise verbal cueing aloud for 5 different asanas',
+                    'Work on voice modulation and Sanskrit pronunciation',
+                    'Teach a 20-minute segment to your peer group'
+                ]},
+                { id: 'm2w3', title: 'Week 7', focus: 'Adjustments & Safety', tasks: [
+                    'Learn hands-on adjustments for 10 core asanas',
+                    'Study common injuries, modifications and contraindications',
+                    'Assist in 5 live classes from start to finish'
+                ]},
+                { id: 'm2w4', title: 'Week 8', focus: 'Meditation & Philosophy', tasks: [
+                    'Study selected sutras from Patanjali’s Yoga Sutras',
+                    'Learn a guided meditation and a Yoga Nidra script',
+                    'Lead a 10-minute guided relaxation session',
+                    'Submit the Month 2 reflection report'
+                ]}
+            ]
+        },
+        {
+            id: 'm3', title: 'Month 3 — Teaching & Certification',
+            subtitle: 'Lead classes with confidence and complete your internship portfolio.',
+            weeks: [
+                { id: 'm3w1', title: 'Week 9', focus: 'Co-Teaching', tasks: [
+                    'Co-teach a full 60-minute class with your mentor',
+                    'Handle warm-up and cool-down independently',
+                    'Collect and review student feedback forms'
+                ]},
+                { id: 'm3w2', title: 'Week 10', focus: 'Independent Teaching', tasks: [
+                    'Teach 2 full classes solo under observation',
+                    'Design a themed class (backbends, hips or twists)',
+                    'Record one session and review it with your mentor'
+                ]},
+                { id: 'm3w3', title: 'Week 11', focus: 'Content & Community', tasks: [
+                    'Write 3 blog posts or social captions for the school',
+                    'Help organise a workshop or community yoga camp',
+                    'Build a personal sequence library and class playlist'
+                ]},
+                { id: 'm3w4', title: 'Week 12', focus: 'Assessment & Handover', tasks: [
+                    'Complete the final practical teaching assessment',
+                    'Submit your internship portfolio and journal',
+                    'Present key learnings to the school team',
+                    'Finish certification formalities and feedback session'
+                ]}
+            ]
+        }
+    ];
+
+    // Map weekId -> index (0..11) for default scheduling
+    const WEEK_INDEX = {};
+    PLAN.forEach(function (m, mi) {
+        m.weeks.forEach(function (w, wi) { WEEK_INDEX[w.id] = mi * 4 + wi; });
+    });
+
+    const DEFAULT_INTERNS = ['Priya Sharma', 'Rahul Verma', 'Ananya Iyer', 'Karan Mehta'];
+    const DEFAULT_STAFF   = ['Acharya Anand', 'Dr. Meera Joshi', 'Swami Prakash'];
+    const DEFAULT_TYPES   = [
+        { name: 'Orientation', color: '#3b82f6' },
+        { name: 'Observation', color: '#8b5cf6' },
+        { name: 'Practice',    color: '#10b981' },
+        { name: 'Teaching',    color: '#f59e0b' },
+        { name: 'Assessment',  color: '#ef4444' },
+        { name: 'Philosophy',  color: '#6366f1' },
+        { name: 'Performance', color: '#ec4899' },
+        { name: 'Report',      color: '#64748b' }
+    ];
+    const TYPE_COLORS = ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444','#6366f1','#ec4899','#64748b','#14b8a6','#f97316'];
+
+    /* ================= STATE ================= */
+    const STORAGE_KEY = 'pragya-internship-planner-v4';
+    const LEGACY_KEY  = 'pragya-internship-planner-v3';
+
+    function uid(prefix) {
+        return (prefix || 'x') + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    function todayISO() {
+        const d = new Date();
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+
+    function defaultState() {
+        return {
+            done: {},
+            edits: {},     // taskId -> { text, typeId, scheduledDate, scheduledTime, marks, markedBy, internIds, staffId }
+            custom: {},    // weekId -> [{ id, text, typeId, scheduledDate, scheduledTime, marks, markedBy, internIds, staffId }]
+            removed: {},
+            planStart: todayISO(),
+            roster: {
+                interns: DEFAULT_INTERNS.map(function (n) { return { id: uid('i'), name: n }; }),
+                staff:   DEFAULT_STAFF.map(function (n) { return { id: uid('s'), name: n }; }),
+                types:   DEFAULT_TYPES.map(function (t, i) {
+                    return { id: 'tt' + i + '-' + uid('t'), name: t.name, color: t.color };
+                })
+            }
+        };
+    }
+
+    function loadState() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const p = JSON.parse(raw);
+                const s = defaultState();
+                s.done = p.done || {};
+                s.edits = p.edits || {};
+                s.custom = p.custom || {};
+                s.removed = p.removed || {};
+                s.planStart = p.planStart || todayISO();
+                if (p.roster) {
+                    s.roster = {
+                        interns: p.roster.interns || [],
+                        staff: p.roster.staff || [],
+                        types: p.roster.types || DEFAULT_TYPES.map(function (t, i) {
+                            return { id: 'tt' + i + '-' + uid('t'), name: t.name, color: t.color };
+                        })
+                    };
+                }
+                return s;
+            }
+            // Legacy v3 → v4 migration
+            const legacyRaw = localStorage.getItem(LEGACY_KEY);
+            if (legacyRaw) {
+                const old = JSON.parse(legacyRaw);
+                const s = defaultState();
+                s.done = old.done || {};
+                s.removed = old.removed || {};
+                s.edits = {};
+                s.custom = {};
+
+                Object.keys(old.edits || {}).forEach(function (k) {
+                    const e = old.edits[k] || {};
+                    s.edits[k] = {
+                        text: e.text,
+                        internIds: e.internIds || [],
+                        staffId: e.staffId || ''
+                    };
+                });
+                Object.keys(old.custom || {}).forEach(function (w) {
+                    s.custom[w] = (old.custom[w] || []).map(function (t) {
+                        return {
+                            id: t.id || uid('c'),
+                            text: t.text,
+                            internIds: t.internIds || [],
+                            staffId: t.staffId || ''
+                        };
+                    });
+                });
+                if (old.roster) {
+                    s.roster = {
+                        interns: old.roster.interns || s.roster.interns,
+                        staff:   old.roster.staff || s.roster.staff,
+                        types:   s.roster.types
+                    };
+                }
+                return s;
+            }
+        } catch (err) { /* fall through */ }
+        return defaultState();
+    }
+
+    function saveState() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        catch (err) { /* ignore */ }
+    }
+
+    let state = loadState();
+
+    /* ---- UI state ---- */
+    let activeView = 'planner';
+    let activeTab = 'all';
+    let filterIntern = '';
+    let filterStaff = '';
+    let filterType = '';
+    let filterStatus = 'all';
+    let editingTaskId = null;
+
+    let profileMode = 'single';
+    let singleInternId = state.roster.interns[0] ? state.roster.interns[0].id : '';
+    let batchSelection = state.roster.interns.slice(0, 4).map(function (i) { return i.id; });
+
+    /* ================= DOM ================= */
+    const viewNav      = document.getElementById('viewNav');
+    const viewPlanner  = document.getElementById('viewPlanner');
+    const viewProfiles = document.getElementById('viewProfiles');
+    const viewRoster   = document.getElementById('viewRoster');
+
+    const monthsEl     = document.getElementById('months');
+    const tabsEl       = document.getElementById('tabs');
+    const toastEl      = document.getElementById('toast');
+    const teamCard     = document.getElementById('teamCard');
+    const internGrid   = document.getElementById('internGrid');
+    const filterInternEl = document.getElementById('filterIntern');
+    const filterStaffEl  = document.getElementById('filterStaff');
+    const filterTypeEl   = document.getElementById('filterType');
+    const filterStatusEl = document.getElementById('filterStatus');
+
+    const internRosterList = document.getElementById('internRosterList');
+    const staffRosterList  = document.getElementById('staffRosterList');
+    const typeRosterList   = document.getElementById('typeRosterList');
+
+    const profileGrid   = document.getElementById('profileGrid');
+    const singlePicker  = document.getElementById('singlePicker');
+    const singleSelect  = document.getElementById('singleSelect');
+    const batchBar      = document.getElementById('batchBar');
+    const batchChips    = document.getElementById('batchChips');
+
+    const modalOverlay  = document.getElementById('modalOverlay');
+    const editText      = document.getElementById('editText');
+    const editType      = document.getElementById('editType');
+    const editStaff     = document.getElementById('editStaff');
+    const editDate      = document.getElementById('editDate');
+    const editTime      = document.getElementById('editTime');
+    const editMarks     = document.getElementById('editMarks');
+    const editMarkedBy  = document.getElementById('editMarkedBy');
+    const internPicker  = document.getElementById('internPicker');
+
+    /* ================= HELPERS ================= */
+    function escapeHtml(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function initials(name) {
+        const parts = String(name).trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '?';
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function internById(id) {
+        if (!id) return null;
+        return state.roster.interns.filter(function (i) { return i.id === id; })[0] || null;
+    }
+    function staffById(id) {
+        if (!id) return null;
+        return state.roster.staff.filter(function (s) { return s.id === id; })[0] || null;
+    }
+    function typeById(id) {
+        if (!id) return null;
+        return state.roster.types.filter(function (t) { return t.id === id; })[0] || null;
+    }
+    function staffName(id)  { const s = staffById(id);  return s ? s.name : ''; }
+    function typeName(id)   { const t = typeById(id);   return t ? t.name : ''; }
+
+    let toastTimer = null;
+    function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 3000);
+    }
+
+    function isoDate(d) {
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+
+    function defaultDateForWeek(weekId) {
+        const idx = WEEK_INDEX[weekId];
+        if (idx === undefined) return '';
+        const base = new Date(state.planStart + 'T00:00:00');
+        if (isNaN(base.getTime())) return '';
+        base.setDate(base.getDate() + idx * 7);
+        return isoDate(base);
+    }
+
+    function formatDate(iso) {
+        if (!iso) return '';
+        const d = new Date(iso + 'T00:00:00');
+        if (isNaN(d.getTime())) return iso;
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+
+    function isOverdue(task) {
+        if (task.done) return false;
+        const d = task.scheduledDate || defaultDateForWeek(task.weekId);
+        if (!d) return false;
+        return d < todayISO();
+    }
+
+    function isRescheduled(task) {
+        if (!task.scheduledDate) return false;
+        const def = defaultDateForWeek(task.weekId);
+        return !!def && task.scheduledDate !== def;
+    }
+
+    /* ================= TASK DATA ================= */
+    function normalizeInternIds(arr) {
+        if (!Array.isArray(arr)) return [];
+        return arr.filter(function (id) { return !!internById(id); });
+    }
+    function normalizeTypeId(id) {
+        return typeById(id) ? id : '';
+    }
+    function normalizeStaffId(id) {
+        return staffById(id) ? id : '';
+    }
+    function normalizeMarks(v) {
+        if (v === '' || v === null || v === undefined) return null;
+        const n = Number(v);
+        if (isNaN(n)) return null;
+        return Math.max(0, Math.min(10, n));
+    }
+
+    function tasksFor(week) {
+        const defaults = week.tasks.map(function (text, i) {
+            const id = week.id + '-d' + i;
+            if (state.removed[id]) return null;
+            const e = state.edits[id] || {};
+            return {
+                id: id,
+                weekId: week.id,
+                text: e.text !== undefined ? e.text : text,
+                typeId: normalizeTypeId(e.typeId),
+                scheduledDate: e.scheduledDate || '',
+                scheduledTime: e.scheduledTime || '',
+                marks: normalizeMarks(e.marks),
+                markedBy: normalizeStaffId(e.markedBy) || '',
+                internIds: normalizeInternIds(e.internIds),
+                staffId: normalizeStaffId(e.staffId),
+                done: !!state.done[id],
+                custom: false
+            };
+        }).filter(Boolean);
+
+        const custom = (state.custom[week.id] || []).map(function (c) {
+            return {
+                id: c.id,
+                weekId: week.id,
+                text: c.text,
+                typeId: normalizeTypeId(c.typeId),
+                scheduledDate: c.scheduledDate || '',
+                scheduledTime: c.scheduledTime || '',
+                marks: normalizeMarks(c.marks),
+                markedBy: normalizeStaffId(c.markedBy) || '',
+                internIds: normalizeInternIds(c.internIds),
+                staffId: normalizeStaffId(c.staffId),
+                done: !!state.done[c.id],
+                custom: true
+            };
+        });
+
+        return defaults.concat(custom);
+    }
+
+    function allTasksFlat() {
+        const out = [];
+        PLAN.forEach(function (month) {
+            month.weeks.forEach(function (week) {
+                tasksFor(week).forEach(function (task) {
+                    out.push({ monthId: month.id, month: month, weekId: week.id, week: week, task: task });
+                });
+            });
+        });
+        return out;
+    }
+
+    function matchesFilter(task) {
+        if (filterIntern && task.internIds.indexOf(filterIntern) === -1) return false;
+        if (filterStaff && task.staffId !== filterStaff) return false;
+        if (filterType && task.typeId !== filterType) return false;
+        if (filterStatus === 'done' && !task.done) return false;
+        if (filterStatus === 'pending' && task.done) return false;
+        if (filterStatus === 'overdue' && !isOverdue(task)) return false;
+        if (filterStatus === 'rescheduled' && !isRescheduled(task)) return false;
+        return true;
+    }
+
+    function filtersActive() {
+        return !!(filterIntern || filterStaff || filterType || filterStatus !== 'all');
+    }
+
+    function computeProgress() {
+        let total = 0, done = 0, marks = 0, possible = 0;
+        const perMonth = {};
+
+        PLAN.forEach(function (month) {
+            let mTotal = 0, mDone = 0;
+            month.weeks.forEach(function (week) {
+                tasksFor(week).forEach(function (t) {
+                    mTotal++;
+                    possible += 10;
+                    if (t.done) {
+                        mDone++;
+                        if (typeof t.marks === 'number') marks += t.marks;
+                    }
+                });
+            });
+            perMonth[month.id] = { total: mTotal, done: mDone };
+            total += mTotal;
+            done += mDone;
+        });
+
+        return { total: total, done: done, marks: marks, possible: possible, perMonth: perMonth };
+    }
+
+    function internProgress(internId) {
+        let total = 0, done = 0, marks = 0;
+        allTasksFlat().forEach(function (x) {
+            if (x.task.internIds.indexOf(internId) > -1) {
+                total++;
+                if (x.task.done) {
+                    done++;
+                    if (typeof x.task.marks === 'number') marks += x.task.marks;
+                }
+            }
+        });
+        return { total: total, done: done, marks: marks, maxMarks: total * 10 };
+    }
+
+    function staffTaskCount(staffId) {
+        let n = 0;
+        allTasksFlat().forEach(function (x) { if (x.task.staffId === staffId) n++; });
+        return n;
+    }
+
+    function typeTaskCount(typeId) {
+        let n = 0;
+        allTasksFlat().forEach(function (x) { if (x.task.typeId === typeId) n++; });
+        return n;
+    }
+
+    function tasksForIntern(internId) {
+        return allTasksFlat().filter(function (x) {
+            return x.task.internIds.indexOf(internId) > -1;
+        });
+    }
+
+    /* ================= MUTATIONS ================= */
+    function setDone(id, val) {
+        if (val) state.done[id] = true;
+        else delete state.done[id];
+    }
+
+    function updateTask(id, patch) {
+        for (const weekId in state.custom) {
+            const found = state.custom[weekId].filter(function (t) { return t.id === id; })[0];
+            if (found) {
+                Object.keys(patch).forEach(function (k) {
+                    if (k === 'internIds') found.internIds = patch.internIds.slice();
+                    else found[k] = patch[k];
+                });
+                return;
+            }
+        }
+        state.edits[id] = Object.assign({}, state.edits[id], patch);
+    }
+
+    function deleteTask(id) {
+        // Only custom tasks can be deleted (fixed list cannot be skipped)
+        for (const weekId in state.custom) {
+            const idx = state.custom[weekId].findIndex(function (t) { return t.id === id; });
+            if (idx > -1) {
+                state.custom[weekId].splice(idx, 1);
+                if (!state.custom[weekId].length) delete state.custom[weekId];
+                delete state.done[id];
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function findTaskById(id) {
+        const all = allTasksFlat();
+        for (let i = 0; i < all.length; i++) {
+            if (all[i].task.id === id) return all[i];
+        }
+        return null;
+    }
+
+    function removeInternFromAssignments(internId) {
+        Object.keys(state.edits).forEach(function (k) {
+            const e = state.edits[k];
+            if (e && Array.isArray(e.internIds)) {
+                e.internIds = e.internIds.filter(function (x) { return x !== internId; });
+            }
+        });
+        Object.keys(state.custom).forEach(function (w) {
+            state.custom[w].forEach(function (t) {
+                if (Array.isArray(t.internIds)) {
+                    t.internIds = t.internIds.filter(function (x) { return x !== internId; });
+                }
+            });
+        });
+        batchSelection = batchSelection.filter(function (x) { return x !== internId; });
+        if (singleInternId === internId) singleInternId = '';
+    }
+
+    function removeStaffFromAssignments(staffId) {
+        Object.keys(state.edits).forEach(function (k) {
+            if (state.edits[k] && state.edits[k].staffId === staffId) state.edits[k].staffId = '';
+            if (state.edits[k] && state.edits[k].markedBy === staffId) state.edits[k].markedBy = '';
+        });
+        Object.keys(state.custom).forEach(function (w) {
+            state.custom[w].forEach(function (t) {
+                if (t.staffId === staffId) t.staffId = '';
+                if (t.markedBy === staffId) t.markedBy = '';
+            });
+        });
+    }
+
+    function removeTypeFromTasks(typeId) {
+        Object.keys(state.edits).forEach(function (k) {
+            if (state.edits[k] && state.edits[k].typeId === typeId) state.edits[k].typeId = '';
+        });
+        Object.keys(state.custom).forEach(function (w) {
+            state.custom[w].forEach(function (t) {
+                if (t.typeId === typeId) t.typeId = '';
+            });
+        });
+    }
+
+    /* ================= RENDER: NAV ================= */
+    function renderViewNav() {
+        Array.prototype.forEach.call(viewNav.children, function (btn) {
+            btn.classList.toggle('active', btn.dataset.view === activeView);
+        });
+        viewPlanner.hidden  = activeView !== 'planner';
+        viewProfiles.hidden = activeView !== 'profiles';
+        viewRoster.hidden   = activeView !== 'roster';
+    }
+
+    /* ================= RENDER: PLANNER ================= */
+    function badgeHtml(task) {
+        let html = '';
+
+        const type = typeById(task.typeId);
+        if (type) {
+            html += '<span class="badge badge-type" style="background:' + type.color + '" title="Task type">' +
+                    escapeHtml(type.name) + '</span>';
+        }
+
+        const names = task.internIds.map(function (id) {
+            const i = internById(id); return i ? i.name : '';
+        }).filter(Boolean);
+
+        if (names.length === 0) {
+            html += '<span class="badge badge-empty">👤 Unassigned</span>';
+        } else if (names.length === 1) {
+            html += '<span class="badge badge-intern">👤 ' + escapeHtml(names[0]) + '</span>';
+        } else {
+            const shown = names.slice(0, 2).join(', ');
+            const extra = names.length > 2 ? ' +' + (names.length - 2) : '';
+            html += '<span class="badge badge-intern multi" title="' + escapeHtml(names.join(', ')) + '">👥 ' +
+                    escapeHtml(shown + extra) + '</span>';
+        }
+
+        const sName = staffName(task.staffId);
+        if (sName) html += '<span class="badge badge-staff">✓ ' + escapeHtml(sName) + '</span>';
+
+        const dateToShow = task.scheduledDate || defaultDateForWeek(task.weekId);
+        if (dateToShow) {
+            const od = isOverdue(task);
+            const rs = isRescheduled(task);
+            const cls = od ? ' overdue' : (rs ? ' rescheduled' : '');
+            const icon = od ? '⚠ ' : (rs ? '↻ ' : '📅 ');
+            html += '<span class="badge badge-date' + cls + '" title="' +
+                    (od ? 'Overdue — reschedule it' : rs ? 'Rescheduled' : 'Scheduled') + '">' +
+                    icon + formatDate(dateToShow) +
+                    (task.scheduledTime ? ' · ' + task.scheduledTime : '') + '</span>';
+        }
+
+        if (task.done && typeof task.marks === 'number') {
+            const perfect = task.marks === 10 ? ' perfect' : '';
+            html += '<span class="badge badge-marks' + perfect + '" title="Marks obtained">⭐ ' +
+                    task.marks + '/10</span>';
+        }
+
+        return html;
+    }
+
+    function taskHTML(task) {
+        const canDelete = task.custom;
+        return '' +
+            '<div class="task' + (task.done ? ' done' : '') + (isOverdue(task) ? ' overdue' : '') + '" data-id="' + task.id + '">' +
+                '<input type="checkbox" id="' + task.id + '"' + (task.done ? ' checked' : '') + '>' +
+                '<div class="task-body">' +
+                    '<label class="task-text" for="' + task.id + '">' + escapeHtml(task.text) + '</label>' +
+                    '<div class="task-meta">' + badgeHtml(task) + '</div>' +
+                '</div>' +
+                '<button type="button" class="icon-btn edit-btn" title="Edit / schedule / mark" aria-label="Edit task">✎</button>' +
+                (canDelete ? '<button type="button" class="icon-btn del" title="Remove custom task" aria-label="Remove task">×</button>' : '') +
+            '</div>';
+    }
+
+    function weekHTML(week) {
+        const all = tasksFor(week);
+        const filtering = filtersActive();
+        const visible = filtering ? all.filter(matchesFilter) : all;
+
+        if (filtering && visible.length === 0) return '';
+
+        const doneCount = all.filter(function (t) { return t.done; }).length;
+        const defDate = defaultDateForWeek(week.id);
+
+        return '' +
+            '<div class="week" data-week="' + week.id + '">' +
+                '<div class="week-head">' +
+                    '<div class="week-title-wrap">' +
+                        '<span class="week-title">' + escapeHtml(week.title) + '</span>' +
+                        '<span class="week-focus">' + escapeHtml(week.focus) + '</span>' +
+                        (defDate ? '<span class="week-dates">' + formatDate(defDate) + '</span>' : '') +
+                    '</div>' +
+                    '<span class="week-count">' + doneCount + '/' + all.length + '</span>' +
+                '</div>' +
+                '<div class="tasks">' + visible.map(taskHTML).join('') + '</div>' +
+                '<form class="add-form" data-week="' + week.id + '">' +
+                    '<input type="text" placeholder="Add a custom task…" aria-label="Add a task to ' + escapeHtml(week.title) + '">' +
+                    '<button type="submit">Add</button>' +
+                '</form>' +
+            '</div>';
+    }
+
+    function monthHTML(month, progress) {
+        const stats = progress.perMonth[month.id];
+        const pct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
+        const weeksHtml = month.weeks.map(weekHTML).join('');
+
+        if (filtersActive() && weeksHtml === '') return '';
+
+        return '' +
+            '<section class="month card" data-month="' + month.id + '">' +
+                '<div class="month-head">' +
+                    '<div>' +
+                        '<h2 class="month-title">' + escapeHtml(month.title) + '</h2>' +
+                        '<p class="month-sub">' + escapeHtml(month.subtitle) + '</p>' +
+                    '</div>' +
+                    '<div class="month-pct">' + pct + '%<span>' + stats.done + '/' + stats.total + '</span></div>' +
+                '</div>' +
+                '<div class="bar"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+                weeksHtml +
+            '</section>';
+    }
+
+    function renderTeam() {
+        const interns = state.roster.interns;
+        if (!interns.length) { teamCard.style.display = 'none'; return; }
+
+        const chips = interns.map(function (i) {
+            const p = internProgress(i.id);
+            const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+            return '' +
+                '<div class="intern-chip">' +
+                    '<div class="intern-chip-name">' +
+                        '<span>' + escapeHtml(i.name) + '</span>' +
+                        '<span class="intern-chip-pct">' + p.done + '/' + p.total + ' · ' + pct + '%</span>' +
+                    '</div>' +
+                    '<div class="bar"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+                    '<div class="intern-chip-marks">⭐ ' + p.marks + '/' + p.maxMarks + ' marks</div>' +
+                '</div>';
+        }).join('');
+
+        internGrid.innerHTML = chips;
+        teamCard.style.display = '';
+    }
+
+    function renderFilterOptions() {
+        const interns = state.roster.interns;
+        const staff   = state.roster.staff;
+        const types   = state.roster.types;
+
+        if (!internById(filterIntern)) filterIntern = '';
+        if (!staffById(filterStaff))  filterStaff = '';
+        if (!typeById(filterType))    filterType = '';
+
+        filterInternEl.innerHTML = ['<option value="">All interns</option>'].concat(
+            interns.map(function (i) {
+                return '<option value="' + i.id + '"' + (i.id === filterIntern ? ' selected' : '') + '>' +
+                       escapeHtml(i.name) + '</option>';
+            })
+        ).join('');
+
+        filterStaffEl.innerHTML = ['<option value="">All staff</option>'].concat(
+            staff.map(function (s) {
+                return '<option value="' + s.id + '"' + (s.id === filterStaff ? ' selected' : '') + '>' +
+                       escapeHtml(s.name) + '</option>';
+            })
+        ).join('');
+
+        filterTypeEl.innerHTML = ['<option value="">All types</option>'].concat(
+            types.map(function (t) {
+                return '<option value="' + t.id + '"' + (t.id === filterType ? ' selected' : '') + '>' +
+                       escapeHtml(t.name) + '</option>';
+            })
+        ).join('');
+    }
+
+    function renderTabs() {
+        const tabs = [{ id: 'all', label: 'All Months' }].concat(
+            PLAN.map(function (m) { return { id: m.id, label: m.title.split('—')[0].trim() }; })
+        );
+        tabsEl.innerHTML = tabs.map(function (t) {
+            return '<button type="button" class="tab' + (t.id === activeTab ? ' active' : '') +
+                '" data-tab="' + t.id + '">' + escapeHtml(t.label) + '</button>';
+        }).join('');
+    }
+
+    function renderPlanner() {
+        const progress = computeProgress();
+
+        document.getElementById('statTotal').textContent = progress.total;
+        document.getElementById('statDone').textContent = progress.done;
+        document.getElementById('statLeft').textContent = progress.total - progress.done;
+        document.getElementById('statMarks').textContent = progress.marks;
+
+        const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
+        document.getElementById('statPct').textContent = pct + '%';
+        document.getElementById('overallFill').style.width = pct + '%';
+        document.getElementById('overallLabel').textContent =
+            progress.done + ' of ' + progress.total + ' tasks completed · ' +
+            progress.marks + '/' + progress.possible + ' marks awarded';
+
+        renderTeam();
+        renderFilterOptions();
+        renderTabs();
+
+        const visible = activeTab === 'all'
+            ? PLAN
+            : PLAN.filter(function (m) { return m.id === activeTab; });
+
+        const html = visible.map(function (m) { return monthHTML(m, progress); }).join('');
+
+        if (filtersActive() && html === '') {
+            monthsEl.innerHTML =
+                '<div class="empty-note">' +
+                    '<strong>No tasks match your filters</strong>' +
+                    'Try clearing the intern, staff, type or status filters to see more tasks.' +
+                '</div>';
+        } else {
+            monthsEl.innerHTML = html;
+        }
+    }
+
+    /* ================= RENDER: ROSTER ================= */
+    function rosterItemHtml(person, type) {
+        const isIntern = type === 'intern';
+        const isStaff  = type === 'staff';
+        const isType   = type === 'type';
+
+        let avatarCls = '';
+        let avatarContent = initials(person.name);
+        let label = '';
+
+        if (isIntern) {
+            label = internProgress(person.id).total === 1
+                ? '1 task assigned' : internProgress(person.id).total + ' tasks assigned';
+        } else if (isStaff) {
+            const n = staffTaskCount(person.id);
+            label = n === 1 ? 'checking 1 task' : 'checking ' + n + ' tasks';
+        } else {
+            const n = typeTaskCount(person.id);
+            label = n === 1 ? '1 task tagged' : n + ' tasks tagged';
+            avatarCls = ' type-av';
+            avatarContent = '';
+        }
+
+        const avatarStyle = isType
+            ? ' style="background:' + person.color + '"'
+            : '';
+
+        return '' +
+            '<div class="roster-item" data-id="' + person.id + '" data-type="' + type + '">' +
+                (isType
+                    ? '<div class="avatar' + avatarCls + '"' + avatarStyle + '></div>'
+                    : '<div class="avatar' + avatarCls + '">' + escapeHtml(avatarContent) + '</div>') +
+                '<div class="roster-info">' +
+                    '<div class="roster-name">' + escapeHtml(person.name) + '</div>' +
+                    '<div class="roster-count">' + label + '</div>' +
+                '</div>' +
+                '<div class="roster-actions">' +
+                    '<button type="button" class="icon-btn rename-btn" title="Rename" aria-label="Rename">✎</button>' +
+                    '<button type="button" class="icon-btn del remove-roster-btn" title="Remove" aria-label="Remove">×</button>' +
+                '</div>' +
+            '</div>';
+    }
+
+    function renderRoster() {
+        const interns = state.roster.interns;
+        const staff   = state.roster.staff;
+        const types   = state.roster.types;
+
+        internRosterList.innerHTML = interns.length
+            ? interns.map(function (i) { return rosterItemHtml(i, 'intern'); }).join('')
+            : '<div class="roster-empty">No interns yet. Add one above to start assigning tasks.</div>';
+
+        staffRosterList.innerHTML = staff.length
+            ? staff.map(function (s) { return rosterItemHtml(s, 'staff'); }).join('')
+            : '<div class="roster-empty">No staff yet. Add a staff member to check intern tasks.</div>';
+
+        typeRosterList.innerHTML = types.length
+            ? types.map(function (t) { return rosterItemHtml(t, 'type'); }).join('')
+            : '<div class="roster-empty">No task types yet. Add one to categorise your tasks.</div>';
+    }
+
+    /* ================= RENDER: PROFILES ================= */
+    function profileTaskHtml(entry, internId) {
+        const t = entry.task;
+        const sName = staffName(t.staffId);
+        const others = t.internIds.filter(function (x) { return x !== internId; })
+            .map(function (x) { const i = internById(x); return i ? i.name : ''; }).filter(Boolean);
+
+        let meta = '';
+        const type = typeById(t.typeId);
+        if (type) meta += '<span class="badge badge-type" style="background:' + type.color + '">' + escapeHtml(type.name) + '</span>';
+        if (sName) meta += '<span class="badge badge-staff">✓ ' + escapeHtml(sName) + '</span>';
+        if (others.length) meta += '<span class="badge badge-intern multi">+ ' + escapeHtml(others.join(', ')) + '</span>';
+
+        const d = t.scheduledDate || defaultDateForWeek(t.weekId);
+        if (d) {
+            const od = isOverdue(t);
+            const rs = isRescheduled(t);
+            const cls = od ? ' overdue' : (rs ? ' rescheduled' : '');
+            meta += '<span class="badge badge-date' + cls + '">' + (od ? '⚠ ' : rs ? '↻ ' : '📅 ') + formatDate(d) + '</span>';
+        }
+
+        if (t.done && typeof t.marks === 'number') {
+            const perfect = t.marks === 10 ? ' perfect' : '';
+            meta += '<span class="badge badge-marks' + perfect + '">⭐ ' + t.marks + '/10</span>';
+        }
+
+        return '' +
+            '<div class="ptask' + (t.done ? ' done' : '') + (isOverdue(t) ? ' overdue' : '') + '" data-id="' + t.id + '">' +
+                '<input type="checkbox" id="p-' + t.id + '"' + (t.done ? ' checked' : '') + '>' +
+                '<div class="ptask-main">' +
+                    '<label class="ptask-text" for="p-' + t.id + '">' + escapeHtml(t.text) + '</label>' +
+                    (meta ? '<div class="ptask-meta">' + meta + '</div>' : '') +
+                '</div>' +
+            '</div>';
+    }
+
+    function profileCardHtml(internId) {
+        const intern = internById(internId);
+        if (!intern) return '';
+
+        const entries = tasksForIntern(internId);
+        const p = internProgress(internId);
+        const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+
+        let body = '';
+        if (!entries.length) {
+            body = '<div class="ptask-empty">No tasks assigned yet.<br>Use the Planner tab to assign tasks.</div>';
+        } else {
+            let currentGroup = '';
+            entries.forEach(function (entry) {
+                const groupLabel = entry.month.title.split('—')[0].trim() + ' · ' + entry.week.title + ' · ' + entry.week.focus;
+                if (groupLabel !== currentGroup) {
+                    if (currentGroup) body += '</div>';
+                    body += '<div class="pgroup"><div class="pgroup-title">' + escapeHtml(groupLabel) + '</div>';
+                    currentGroup = groupLabel;
+                }
+                body += profileTaskHtml(entry, internId);
+            });
+            if (currentGroup) body += '</div>';
+        }
+
+        return '' +
+            '<div class="pcard card" data-intern="' + internId + '">' +
+                '<div class="pcard-head">' +
+                    '<div class="pcard-top">' +
+                        '<div class="avatar">' + escapeHtml(initials(intern.name)) + '</div>' +
+                        '<div class="pcard-name">' + escapeHtml(intern.name) + '</div>' +
+                    '</div>' +
+                    '<div class="pcard-marks-row">' +
+                        '<div class="pcard-marks">' +
+                            p.marks + '<span class="pcard-marks-denom">/' + p.maxMarks + '</span>' +
+                            '<small>marks</small>' +
+                        '</div>' +
+                        '<div class="pcard-task-stat">' +
+                            '<b>' + p.done + '/' + p.total + '</b> tasks · ' + pct + '%' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="bar"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+                '</div>' +
+                '<div class="pcard-body">' + body + '</div>' +
+            '</div>';
+    }
+
+    function renderProfiles() {
+        const interns = state.roster.interns;
+
+        if (!interns.length) {
+            singlePicker.hidden = true;
+            batchBar.hidden = true;
+            profileGrid.className = 'profile-grid cols-1';
+            profileGrid.innerHTML =
+                '<div class="empty-note">' +
+                    '<strong>No interns yet</strong>' +
+                    'Go to the <b>Roster & Types</b> tab to add interns, then come back here to see their profiles.' +
+                '</div>';
+            return;
+        }
+
+        Array.prototype.forEach.call(document.getElementById('profileModeSeg').children, function (b) {
+            b.classList.toggle('active', b.dataset.mode === profileMode);
+        });
+
+        if (profileMode === 'single') {
+            singlePicker.hidden = false;
+            batchBar.hidden = true;
+
+            if (!internById(singleInternId)) singleInternId = interns[0].id;
+
+            singleSelect.innerHTML = interns.map(function (i) {
+                return '<option value="' + i.id + '"' + (i.id === singleInternId ? ' selected' : '') + '>' +
+                       escapeHtml(i.name) + '</option>';
+            }).join('');
+            singleSelect.value = singleInternId;
+
+            profileGrid.className = 'profile-grid cols-1';
+            profileGrid.innerHTML = profileCardHtml(singleInternId);
+        } else {
+            singlePicker.hidden = true;
+            batchBar.hidden = false;
+
+            batchSelection = batchSelection.filter(function (id) { return !!internById(id); });
+            if (batchSelection.length === 0) {
+                batchSelection = interns.slice(0, 4).map(function (i) { return i.id; });
+            }
+
+            batchChips.innerHTML = interns.map(function (i) {
+                const on = batchSelection.indexOf(i.id) > -1;
+                const disabled = !on && batchSelection.length >= 4;
+                return '<button type="button" class="batch-chip' + (on ? ' on' : '') + '"' +
+                       ' data-intern="' + i.id + '"' + (disabled ? ' disabled' : '') + '>' +
+                       '<span class="mini-av">' + escapeHtml(initials(i.name)) + '</span>' +
+                       escapeHtml(i.name) + '</button>';
+            }).join('');
+
+            const ids = batchSelection.slice(0, 4);
+            const cols = Math.max(1, ids.length);
+            profileGrid.className = 'profile-grid cols-' + cols;
+            profileGrid.innerHTML = ids.map(function (id) { return profileCardHtml(id); }).join('');
+        }
+    }
+
+    /* ================= MAIN RENDER ================= */
+    function render() {
+        renderViewNav();
+        if (activeView === 'planner') renderPlanner();
+        else if (activeView === 'profiles') renderProfiles();
+        else if (activeView === 'roster') renderRoster();
+    }
+
+    /* ================= MODAL ================= */
+    function renderInternPicker(selectedIds) {
+        const interns = state.roster.interns;
+        if (!interns.length) {
+            internPicker.innerHTML = '<div class="picker-empty">No interns in roster yet. Add them in the Roster tab.</div>';
+            return;
+        }
+        internPicker.innerHTML = interns.map(function (i) {
+            const on = selectedIds.indexOf(i.id) > -1;
+            return '<label class="pick-chip' + (on ? ' on' : '') + '">' +
+                       '<input type="checkbox" value="' + i.id + '"' + (on ? ' checked' : '') + '>' +
+                       '<span>' + escapeHtml(i.name) + '</span>' +
+                   '</label>';
+        }).join('');
+    }
+
+    function collectPickedInternIds() {
+        return Array.prototype.slice.call(internPicker.querySelectorAll('input[type="checkbox"]'))
+            .filter(function (c) { return c.checked; })
+            .map(function (c) { return c.value; });
+    }
+
+    function renderSelect(sel, items, selectedId, blankLabel) {
+        sel.innerHTML = ['<option value="">' + escapeHtml(blankLabel || '— None —') + '</option>'].concat(
+            items.map(function (it) {
+                return '<option value="' + it.id + '"' + (it.id === selectedId ? ' selected' : '') + '>' +
+                       escapeHtml(it.name) + '</option>';
+            })
+        ).join('');
+        sel.value = selectedId && items.some(function (it) { return it.id === selectedId; }) ? selectedId : '';
+    }
+
+    function openModal(taskId) {
+        const found = findTaskById(taskId);
+        if (!found) return;
+
+        editingTaskId = taskId;
+        const t = found.task;
+
+        editText.value = t.text;
+        renderSelect(editType, state.roster.types, t.typeId, '— No type —');
+        renderSelect(editStaff, state.roster.staff, t.staffId, '— No staff assigned —');
+        renderSelect(editMarkedBy, state.roster.staff, t.markedBy, '— Not marked yet —');
+
+        editDate.value = t.scheduledDate || defaultDateForWeek(t.weekId);
+        editTime.value = t.scheduledTime || '';
+        editMarks.value = (typeof t.marks === 'number') ? t.marks : '';
+
+        const def = defaultDateForWeek(t.weekId);
+        const hint = document.getElementById('editDateHint');
+        if (def) {
+            hint.textContent = 'Original week date: ' + formatDate(def) + '. Change to reschedule.';
+        } else {
+            hint.textContent = 'Change the date to reschedule this task.';
+        }
+
+        renderInternPicker(t.internIds);
+        updateMarksHint();
+        updateTypeDeleteButton();
+
+        modalOverlay.classList.add('open');
+        setTimeout(function () { editText.focus(); }, 60);
+    }
+
+    function updateMarksHint() {
+        const hint = document.getElementById('marksHint');
+        const v = editMarks.value;
+        if (v === '' || v === null) {
+            hint.textContent = 'Each task is worth 10 marks. Enter marks after checking the task complete.';
+        } else {
+            const n = Number(v);
+            if (n >= 9) hint.textContent = 'Excellent — ' + n + '/10 marks.';
+            else if (n >= 7) hint.textContent = 'Good — ' + n + '/10 marks.';
+            else if (n >= 5) hint.textContent = 'Satisfactory — ' + n + '/10 marks.';
+            else hint.textContent = 'Needs improvement — ' + n + '/10 marks.';
+        }
+    }
+
+    function updateTypeDeleteButton() {
+        // no-op; kept for symmetry
+    }
+
+    function closeModal() {
+        modalOverlay.classList.remove('open');
+        editingTaskId = null;
+    }
+
+    function saveModal() {
+        if (!editingTaskId) return;
+
+        const newText = editText.value.trim();
+        if (!newText) {
+            toast('Task description cannot be empty.');
+            editText.focus();
+            return;
+        }
+
+        const marksVal = editMarks.value === '' ? null : Number(editMarks.value);
+        const marks = (marksVal === null || isNaN(marksVal)) ? null : Math.max(0, Math.min(10, marksVal));
+
+        updateTask(editingTaskId, {
+            text: newText,
+            typeId: editType.value || '',
+            staffId: editStaff.value || '',
+            scheduledDate: editDate.value || '',
+            scheduledTime: editTime.value || '',
+            marks: marks,
+            markedBy: editMarkedBy.value || '',
+            internIds: collectPickedInternIds()
+        });
+
+        saveState();
+        closeModal();
+        render();
+        toast('Task updated ✓');
+    }
+
+    function deleteFromModal() {
+        if (!editingTaskId) return;
+        const found = findTaskById(editingTaskId);
+        if (!found) return;
+
+        if (!found.task.custom) {
+            toast('This task is part of the fixed plan and cannot be deleted.');
+            return;
+        }
+
+        if (!confirm('Delete this custom task? This cannot be undone.')) return;
+        deleteTask(editingTaskId);
+        saveState();
+        closeModal();
+        render();
+        toast('Custom task deleted');
+    }
+
+    /* ================= EVENT BINDINGS ================= */
+
+    /* ---- View nav ---- */
+    viewNav.addEventListener('click', function (e) {
+        const btn = e.target.closest('button[data-view]');
+        if (!btn) return;
+        activeView = btn.dataset.view;
+        render();
+    });
+
+    /* ---- Planner: tabs ---- */
+    tabsEl.addEventListener('click', function (e) {
+        const btn = e.target.closest('.tab');
+        if (!btn) return;
+        activeTab = btn.dataset.tab;
+        renderPlanner();
+    });
+
+    /* ---- Planner: filters ---- */
+    filterInternEl.addEventListener('change', function () { filterIntern = filterInternEl.value; renderPlanner(); });
+    filterStaffEl.addEventListener('change',  function () { filterStaff  = filterStaffEl.value;  renderPlanner(); });
+    filterTypeEl.addEventListener('change',   function () { filterType   = filterTypeEl.value;   renderPlanner(); });
+    filterStatusEl.addEventListener('change', function () { filterStatus = filterStatusEl.value; renderPlanner(); });
+
+    document.getElementById('clearFilters').addEventListener('click', function () {
+        filterIntern = ''; filterStaff = ''; filterType = ''; filterStatus = 'all';
+        filterInternEl.value = ''; filterStaffEl.value = ''; filterTypeEl.value = ''; filterStatusEl.value = 'all';
+        renderPlanner();
+    });
+
+    /* ---- Planner: checkbox toggle ---- */
+    monthsEl.addEventListener('change', function (e) {
+        const checkbox = e.target.closest('input[type="checkbox"]');
+        if (!checkbox) return;
+
+        const row = checkbox.closest('.task');
+        const id = row.dataset.id;
+        const monthEl = row.closest('.month');
+        const monthId = monthEl ? monthEl.dataset.month : null;
+        const before = monthId ? computeProgress().perMonth[monthId] : null;
+
+        setDone(id, checkbox.checked);
+        saveState();
+
+        if (before) {
+            const after = computeProgress().perMonth[monthId];
+            if (before.done < before.total && after.done === after.total && after.total > 0) {
+                const month = PLAN.filter(function (m) { return m.id === monthId; })[0];
+                toast('🎉 ' + month.title.split('—')[0].trim() + ' complete!');
+            }
+        }
+        renderPlanner();
+    });
+
+    /* ---- Planner: edit / delete ---- */
+    monthsEl.addEventListener('click', function (e) {
+        const editBtn = e.target.closest('.edit-btn');
+        if (editBtn) {
+            const row = editBtn.closest('.task');
+            if (row) openModal(row.dataset.id);
+            return;
+        }
+        const del = e.target.closest('.del');
+        if (del) {
+            const row = del.closest('.task');
+            if (!row) return;
+            const found = findTaskById(row.dataset.id);
+            if (!found) return;
+            if (!found.task.custom) {
+                toast('Fixed tasks cannot be deleted — reschedule instead.');
+                return;
+            }
+            if (!confirm('Delete this custom task?')) return;
+            deleteTask(row.dataset.id);
+            saveState();
+            renderPlanner();
+        }
+    });
+
+    /* ---- Planner: add custom task ---- */
+    monthsEl.addEventListener('submit', function (e) {
+        const form = e.target.closest('.add-form');
+        if (!form) return;
+        e.preventDefault();
+
+        const input = form.querySelector('input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const weekId = form.dataset.week;
+        if (!state.custom[weekId]) state.custom[weekId] = [];
+
+        state.custom[weekId].push({
+            id: uid('c'),
+            text: text,
+            typeId: '',
+            scheduledDate: defaultDateForWeek(weekId),
+            scheduledTime: '',
+            marks: null,
+            markedBy: '',
+            internIds: filterIntern ? [filterIntern] : [],
+            staffId: filterStaff || ''
+        });
+
+        saveState();
+        renderPlanner();
+
+        const fresh = monthsEl.querySelector('.add-form[data-week="' + weekId + '"] input');
+        if (fresh) fresh.focus();
+    });
+
+    /* ---- Profiles: mode switch ---- */
+    document.getElementById('profileModeSeg').addEventListener('click', function (e) {
+        const btn = e.target.closest('button[data-mode]');
+        if (!btn) return;
+        profileMode = btn.dataset.mode;
+        renderProfiles();
+    });
+
+    singleSelect.addEventListener('change', function () {
+        singleInternId = singleSelect.value;
+        renderProfiles();
+    });
+
+    batchChips.addEventListener('click', function (e) {
+        const chip = e.target.closest('.batch-chip');
+        if (!chip || chip.disabled) return;
+        const id = chip.dataset.intern;
+        const idx = batchSelection.indexOf(id);
+        if (idx > -1) batchSelection.splice(idx, 1);
+        else {
+            if (batchSelection.length >= 4) { toast('You can compare up to 4 interns at once.'); return; }
+            batchSelection.push(id);
+        }
+        renderProfiles();
+    });
+
+    document.getElementById('batchAllBtn').addEventListener('click', function () {
+        batchSelection = state.roster.interns.slice(0, 4).map(function (i) { return i.id; });
+        renderProfiles();
+    });
+
+    /* ---- Profiles: checkbox toggle ---- */
+    profileGrid.addEventListener('change', function (e) {
+        const checkbox = e.target.closest('input[type="checkbox"]');
+        if (!checkbox) return;
+        const row = checkbox.closest('.ptask');
+        if (!row) return;
+        setDone(row.dataset.id, checkbox.checked);
+        saveState();
+        renderProfiles();
+    });
+
+    /* ---- Roster: add intern ---- */
+    document.getElementById('addInternForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const input = document.getElementById('newInternName');
+        const name = input.value.trim();
+        if (!name) return;
+        if (state.roster.interns.some(function (i) { return i.name.toLowerCase() === name.toLowerCase(); })) {
+            toast('An intern with that name already exists.'); return;
+        }
+        state.roster.interns.push({ id: uid('i'), name: name });
+        input.value = '';
+        saveState();
+        render();
+        toast('Intern added: ' + name);
+    });
+
+    /* ---- Roster: add staff ---- */
+    document.getElementById('addStaffForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const input = document.getElementById('newStaffName');
+        const name = input.value.trim();
+        if (!name) return;
+        if (state.roster.staff.some(function (s) { return s.name.toLowerCase() === name.toLowerCase(); })) {
+            toast('A staff member with that name already exists.'); return;
+        }
+        state.roster.staff.push({ id: uid('s'), name: name });
+        input.value = '';
+        saveState();
+        render();
+        toast('Staff added: ' + name);
+    });
+
+    /* ---- Roster: add task type ---- */
+    function addTypeFromInput(name) {
+        name = name.trim();
+        if (!name) return false;
+        if (state.roster.types.some(function (t) { return t.name.toLowerCase() === name.toLowerCase(); })) {
+            toast('That task type already exists.');
+            return false;
+        }
+        const color = TYPE_COLORS[state.roster.types.length % TYPE_COLORS.length];
+        state.roster.types.push({ id: uid('tt'), name: name, color: color });
+        saveState();
+        render();
+        toast('Task type added: ' + name);
+        return true;
+    }
+
+    document.getElementById('addTypeForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const input = document.getElementById('newTypeName');
+        if (addTypeFromInput(input.value)) input.value = '';
+    });
+
+    document.getElementById('addTypeQuick').addEventListener('click', function () {
+        const name = prompt('New task type name (e.g. Performance, Assessment):');
+        if (name === null) return;
+        if (addTypeFromInput(name)) {
+            // After render, reopen the modal with the task still selected
+            // (render() will close the modal, so we just keep it simple)
+            if (editingTaskId) {
+                const tid = editingTaskId;
+                setTimeout(function () { openModal(tid); }, 30);
+            }
+        }
+    });
+
+    /* ---- Roster: rename / remove ---- */
+    function handleRosterClick(e) {
+        const item = e.target.closest('.roster-item');
+        if (!item) return;
+        const id = item.dataset.id;
+        const kind = item.dataset.type;
+
+        if (e.target.closest('.rename-btn')) {
+            let list, person;
+            if (kind === 'intern') { list = state.roster.interns; }
+            else if (kind === 'staff') { list = state.roster.staff; }
+            else { list = state.roster.types; }
+            person = list.filter(function (p) { return p.id === id; })[0];
+            if (!person) return;
+
+            const next = prompt('Rename to:', person.name);
+            if (next === null) return;
+            const trimmed = next.trim();
+            if (!trimmed) { toast('Name cannot be empty.'); return; }
+            person.name = trimmed;
+            saveState();
+            render();
+            toast('Renamed to ' + trimmed);
+            return;
+        }
+
+        if (e.target.closest('.remove-roster-btn')) {
+            if (kind === 'intern') {
+                const person = internById(id);
+                if (!person) return;
+                const p = internProgress(id);
+                const msg = p.total
+                    ? 'Remove ' + person.name + '? They are assigned to ' + p.total + ' task(s). Those assignments will be cleared.'
+                    : 'Remove ' + person.name + '?';
+                if (!confirm(msg)) return;
+                state.roster.interns = state.roster.interns.filter(function (x) { return x.id !== id; });
+                removeInternFromAssignments(id);
+                saveState(); render();
+                toast('Removed ' + person.name);
+            } else if (kind === 'staff') {
+                const person = staffById(id);
+                if (!person) return;
+                const count = staffTaskCount(id);
+                const msg = count
+                    ? 'Remove ' + person.name + '? They are checking ' + count + ' task(s). Those assignments will be cleared.'
+                    : 'Remove ' + person.name + '?';
+                if (!confirm(msg)) return;
+                state.roster.staff = state.roster.staff.filter(function (x) { return x.id !== id; });
+                removeStaffFromAssignments(id);
+                saveState(); render();
+                toast('Removed ' + person.name);
+            } else {
+                const person = typeById(id);
+                if (!person) return;
+                const count = typeTaskCount(id);
+                const msg = count
+                    ? 'Remove task type "' + person.name + '"? ' + count + ' task(s) use it and will be untagged.'
+                    : 'Remove task type "' + person.name + '"?';
+                if (!confirm(msg)) return;
+                state.roster.types = state.roster.types.filter(function (x) { return x.id !== id; });
+                removeTypeFromTasks(id);
+                saveState(); render();
+                toast('Task type removed');
+            }
+        }
+    }
+
+    internRosterList.addEventListener('click', handleRosterClick);
+    staffRosterList.addEventListener('click', handleRosterClick);
+    typeRosterList.addEventListener('click', handleRosterClick);
+
+    /* ---- Modal: picker chip visuals ---- */
+    internPicker.addEventListener('change', function (e) {
+        const cb = e.target.closest('input[type="checkbox"]');
+        if (!cb) return;
+        const chip = cb.closest('.pick-chip');
+        if (chip) chip.classList.toggle('on', cb.checked);
+    });
+
+    document.getElementById('pickAll').addEventListener('click', function () {
+        Array.prototype.forEach.call(internPicker.querySelectorAll('input[type="checkbox"]'), function (cb) {
+            cb.checked = true;
+            const chip = cb.closest('.pick-chip');
+            if (chip) chip.classList.add('on');
+        });
+    });
+
+    document.getElementById('pickNone').addEventListener('click', function () {
+        Array.prototype.forEach.call(internPicker.querySelectorAll('input[type="checkbox"]'), function (cb) {
+            cb.checked = false;
+            const chip = cb.closest('.pick-chip');
+            if (chip) chip.classList.remove('on');
+        });
+    });
+
+    editMarks.addEventListener('input', updateMarksHint);
+
+    /* ---- Modal actions ---- */
+    document.getElementById('modalSave').addEventListener('click', saveModal);
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    document.getElementById('modalDelete').addEventListener('click', deleteFromModal);
+
+    modalOverlay.addEventListener('click', function (e) {
+        if (e.target === modalOverlay) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modalOverlay.classList.contains('open')) closeModal();
+    });
+
+    editText.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            saveModal();
+        }
+    });
+
+    /* ---- Reset ---- */
+    document.getElementById('resetBtn').addEventListener('click', function () {
+        if (!confirm('Reset ALL progress, marks, assignments, roster and custom tasks? This cannot be undone.')) return;
+        state = defaultState();
+        filterIntern = ''; filterStaff = ''; filterType = ''; filterStatus = 'all';
+        filterInternEl.value = ''; filterStaffEl.value = ''; filterTypeEl.value = ''; filterStatusEl.value = 'all';
+        activeTab = 'all';
+        singleInternId = state.roster.interns[0] ? state.roster.interns[0].id : '';
+        batchSelection = state.roster.interns.slice(0, 4).map(function (i) { return i.id; });
+        saveState();
+        render();
+        toast('Everything reset — fresh start! 🌱');
+    });
+
+    /* ================= INIT ================= */
+    if (!internById(singleInternId) && state.roster.interns[0]) {
+        singleInternId = state.roster.interns[0].id;
+    }
+    batchSelection = state.roster.interns.slice(0, 4).map(function (i) { return i.id; });
+
+    render();
+})();
+</script>
+</body>
+</html>

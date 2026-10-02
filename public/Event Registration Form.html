@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Registration Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            margin: 0;
+        }
+        .form-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .radio-group, .checkbox-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .radio-group label {
+            font-weight: normal;
+            margin-bottom: 0;
+        }
+        .nested-group {
+            margin-left: 20px;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #ddd;
+        }
+        .nested-group.hidden {
+            display: none;
+        }
+        .sub-location-group {
+            margin-left: 20px;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #007bff;
+        }
+        .sub-location-group.hidden {
+            display: none;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        @media (max-width: 480px) {
+            .radio-group {
+                gap: 10px;
+            }
+            .form-container {
+                padding: 20px;
+            }
+        }
+        #form-feedback {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 4px;
+            display: none;
+        }
+        #form-feedback.success {
+            display: block;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        #form-feedback.error {
+            display: block;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .teacher-select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Event Registration</h2>
+    <form id="registrationForm" action="#" method="POST" enctype="multipart/form-data" novalidate>
+
+        <!-- Type -->
+        <div class="form-group">
+            <label>Type:</label>
+            <div class="radio-group">
+                <label><input type="radio" name="type" value="workshop" required> Workshop</label>
+                <label><input type="radio" name="type" value="training"> Training</label>
+                <label><input type="radio" name="type" value="retreat"> Retreat</label>
+            </div>
+        </div>
+
+        <!-- Schedule -->
+        <div class="form-group">
+            <label>Schedule:</label>
+            <div class="radio-group">
+                <label><input type="radio" name="schedule_type" value="one_day" required> One Day</label>
+                <label><input type="radio" name="schedule_type" value="multi_days"> Multi Days</label>
+            </div>
+            
+            <div class="nested-group hidden" id="hoursNested">
+                <label for="schedule_hours">Duration (Hours / Total Hours):</label>
+                <input type="number" id="schedule_hours" name="schedule_hours" placeholder="e.g., 4 or 16" min="1" step="1">
+            </div>
+        </div>
+
+        <!-- Location -->
+        <div class="form-group">
+            <label>Location:</label>
+            <div class="radio-group">
+                <label><input type="radio" name="location" value="studio" required> Studio</label>
+                <label><input type="radio" name="location" value="outdoor"> Outdoor</label>
+                <label><input type="radio" name="location" value="overseas"> Overseas</label>
+            </div>
+            
+            <!-- Sub-locations for Studio -->
+            <div class="sub-location-group hidden" id="studioSubLocation">
+                <label for="studio_location">Studio Location:</label>
+                <select id="studio_location" name="studio_location" class="teacher-select">
+                    <option value="">-- Select Studio --</option>
+                    <option value="pragya_yog_school_main">Pragya Yog School - Main Studio</option>
+                    <option value="pragya_central_sadhna">Pragya Central - Sadhna Room</option>
+                    <option value="pragya_central_tapasya">Pragya Central - Tapasya</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Teacher Dropdown -->
+        <div class="form-group">
+            <label for="teacher">Teacher:</label>
+            <select id="teacher" name="teacher" class="teacher-select">
+                <option value="">-- Select Teacher --</option>
+                <option value="swami_anand">Swami Anand</option>
+                <option value="yogini_maya">Yogini Maya</option>
+                <option value="guru_dev">Guru Dev</option>
+                <option value="sri_ramesh">Sri Ramesh</option>
+                <option value="shakti_kaur">Shakti Kaur</option>
+                <option value="acharya_priya">Acharya Priya</option>
+                <option value="baba_haridas">Baba Haridas</option>
+                <option value="mata_jayanti">Mata Jayanti</option>
+            </select>
+        </div>
+
+        <!-- Name -->
+        <div class="form-group">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required placeholder="Enter event or participant name">
+        </div>
+
+        <!-- Date -->
+        <div class="form-group">
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required>
+        </div>
+
+        <!-- Hours -->
+        <div class="form-group">
+            <label for="hours">Hours:</label>
+            <input type="text" id="hours" name="hours" placeholder="e.g., 09:00 AM - 05:00 PM">
+        </div>
+
+        <!-- Capacity -->
+        <div class="form-group">
+            <label for="capacity">Capacity:</label>
+            <input type="number" id="capacity" name="capacity" min="1" placeholder="Maximum capacity">
+        </div>
+
+        <!-- Info -->
+        <div class="form-group">
+            <label for="info">Info:</label>
+            <textarea id="info" name="info" rows="4" placeholder="Additional details or description..."></textarea>
+        </div>
+
+        <!-- Media -->
+        <div class="form-group">
+            <label for="media">Media Upload:</label>
+            <input type="file" id="media" name="media" accept="image/*,video/*">
+        </div>
+
+        <!-- Pricing -->
+        <div class="form-group">
+            <label for="pricing">Pricing ($):</label>
+            <input type="number" id="pricing" name="pricing" step="0.01" min="0" placeholder="0.00">
+        </div>
+
+        <button type="submit">Submit Form</button>
+    </form>
+
+    <div id="form-feedback"></div>
+</div>
+
+<script>
+    (function() {
+        // ---- Show/hide nested hours based on schedule type ----
+        const scheduleRadios = document.querySelectorAll('input[name="schedule_type"]');
+        const hoursNested = document.getElementById('hoursNested');
+        const scheduleHours = document.getElementById('schedule_hours');
+
+        function toggleHours() {
+            const selected = document.querySelector('input[name="schedule_type"]:checked');
+            if (selected && selected.value === 'multi_days') {
+                hoursNested.classList.remove('hidden');
+                scheduleHours.setAttribute('required', 'required');
+            } else {
+                hoursNested.classList.add('hidden');
+                scheduleHours.removeAttribute('required');
+                scheduleHours.value = '';
+            }
+        }
+
+        scheduleRadios.forEach(radio => {
+            radio.addEventListener('change', toggleHours);
+        });
+        toggleHours();
+
+        // ---- Show/hide studio sub-location based on location selection ----
+        const locationRadios = document.querySelectorAll('input[name="location"]');
+        const studioSubLocation = document.getElementById('studioSubLocation');
+        const studioSelect = document.getElementById('studio_location');
+
+        function toggleStudioSubLocation() {
+            const selected = document.querySelector('input[name="location"]:checked');
+            if (selected && selected.value === 'studio') {
+                studioSubLocation.classList.remove('hidden');
+                studioSelect.setAttribute('required', 'required');
+            } else {
+                studioSubLocation.classList.add('hidden');
+                studioSelect.removeAttribute('required');
+                studioSelect.value = '';
+            }
+        }
+
+        locationRadios.forEach(radio => {
+            radio.addEventListener('change', toggleStudioSubLocation);
+        });
+        toggleStudioSubLocation();
+
+        // ---- Set default date to today ----
+        const dateInput = document.getElementById('date');
+        if (dateInput) {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            dateInput.setAttribute('min', yyyy + '-' + mm + '-' + dd);
+            dateInput.value = yyyy + '-' + mm + '-' + dd;
+        }
+
+        // ---- Form submission with client-side validation & feedback ----
+        const form = document.getElementById('registrationForm');
+        const feedback = document.getElementById('form-feedback');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            feedback.className = '';
+            feedback.style.display = 'none';
+            feedback.textContent = '';
+
+            let isValid = true;
+            let errorMessages = [];
+
+            // Radio: type
+            const typeSelected = document.querySelector('input[name="type"]:checked');
+            if (!typeSelected) {
+                isValid = false;
+                errorMessages.push('Please select an event type.');
+            }
+
+            // Radio: schedule_type
+            const scheduleSelected = document.querySelector('input[name="schedule_type"]:checked');
+            if (!scheduleSelected) {
+                isValid = false;
+                errorMessages.push('Please select a schedule type.');
+            }
+
+            // Radio: location
+            const locationSelected = document.querySelector('input[name="location"]:checked');
+            if (!locationSelected) {
+                isValid = false;
+                errorMessages.push('Please select a location.');
+            }
+
+            // Studio sub-location validation
+            if (locationSelected && locationSelected.value === 'studio') {
+                if (!studioSelect.value) {
+                    isValid = false;
+                    errorMessages.push('Please select a studio location.');
+                }
+            }
+
+            // Teacher dropdown validation
+            const teacherSelect = document.getElementById('teacher');
+            if (!teacherSelect.value) {
+                isValid = false;
+                errorMessages.push('Please select a teacher.');
+            }
+
+            // Text inputs: name and date
+            const name = document.getElementById('name');
+            if (!name.value.trim()) {
+                isValid = false;
+                errorMessages.push('Name is required.');
+            }
+
+            const date = document.getElementById('date');
+            if (!date.value) {
+                isValid = false;
+                errorMessages.push('Date is required.');
+            }
+
+            // If multi_days, check schedule_hours
+            if (scheduleSelected && scheduleSelected.value === 'multi_days') {
+                const hoursVal = document.getElementById('schedule_hours');
+                if (!hoursVal.value || parseInt(hoursVal.value) < 1) {
+                    isValid = false;
+                    errorMessages.push('For Multi Days, please enter a valid total hours (minimum 1).');
+                }
+            }
+
+            // Capacity: if filled, must be >= 1
+            const capacity = document.getElementById('capacity');
+            if (capacity.value && parseInt(capacity.value) < 1) {
+                isValid = false;
+                errorMessages.push('Capacity must be at least 1.');
+            }
+
+            // Pricing: if filled, must be >= 0
+            const pricing = document.getElementById('pricing');
+            if (pricing.value && parseFloat(pricing.value) < 0) {
+                isValid = false;
+                errorMessages.push('Pricing cannot be negative.');
+            }
+
+            if (isValid) {
+                feedback.className = 'success';
+                feedback.style.display = 'block';
+                feedback.textContent = '✅ Form submitted successfully! (Demo: no data sent)';
+
+                const formData = new FormData(form);
+                console.log('Form Data:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(key + ': ' + value);
+                }
+            } else {
+                feedback.className = 'error';
+                feedback.style.display = 'block';
+                feedback.textContent = '❌ ' + errorMessages.join(' ');
+            }
+        });
+
+    })();
+</script>
+
+</body>
+</html>

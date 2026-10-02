@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'BN Cringe Serif';
+    src: local('BN Cringe Serif Medium'), local('BN-Cringe-Serif-Medium'),
+        url('BNCringeSerifMedium.woff2') format('woff2'),
+        url('BNCringeSerifMedium.woff') format('woff'),
+        url('BNCringeSerifMedium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+  }

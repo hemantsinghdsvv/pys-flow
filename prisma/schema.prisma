@@ -1,0 +1,1128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────── ENUMS ───────────────────────────
+
+enum Role {
+  MANAGER
+  SENIOR
+  EXECUTIVE
+  INTERN
+  SUPER_ADMIN
+  COMPANY_ADMIN
+  COORDINATOR
+  MENTOR
+  STUDENT
+}
+
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum InternshipType {
+  ONSITE
+  REMOTE
+  HYBRID
+}
+
+enum BatchStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TeamRole {
+  FRONTEND_DEVELOPER
+  BACKEND_DEVELOPER
+  FULLSTACK_DEVELOPER
+  REACT_DEVELOPER
+  FLUTTER_DEVELOPER
+  PYTHON_DEVELOPER
+  ML_ENGINEER
+  AI_ENGINEER
+  PROMPT_ENGINEER
+  UIUX_DESIGNER
+  QA
+  CONTENT_WRITER
+  DOCUMENTATION
+  RESEARCH
+}
+
+enum TaskStatus {
+  PENDING
+  REVIEW
+  COMPLETED
+  CANCELLED
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+}
+
+enum DailyLogStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REWORK
+}
+
+enum ReviewTargetType {
+  DAILY_LOG
+  TASK
+  PULL_REQUEST
+  DEPLOYMENT
+  DOCUMENT
+  PROJECT
+}
+
+enum ReviewVerdict {
+  APPROVED
+  REJECTED
+  REWORK
+}
+
+enum RepoLinkType {
+  BRANCH
+  COMMIT
+  PULL_REQUEST
+  ISSUE
+  RELEASE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LEAVE
+  HOLIDAY
+}
+
+enum AcknowledgementStatus {
+  ON_TIME
+  LATE
+}
+
+enum NotificationType {
+  DAILY_REMINDER
+  TASK_ASSIGNED
+  TASK_REMINDER
+  TASK_APPROVAL_REQUESTED
+  TASK_APPROVED
+  TASK_DECLINED
+  REVIEW_REQUESTED
+  REVIEW_COMPLETED
+  DEADLINE_REMINDER
+  MISSED_REPORT
+  INACTIVE_ALERT
+  GENERAL
+  SYSTEM
+  LOGIN_REMINDER
+  WORK_LOG_REMINDER
+  SUBMISSION_REMINDER
+  SUBMISSION_CONFIRMED
+}
+
+enum DocumentType {
+  OFFER_LETTER
+  NDA
+  COMPLETION_CERTIFICATE
+  EVALUATION_SHEET
+  PROGRESS_REPORT
+  PRESENTATION
+  RESUME
+  OTHER
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  DELETE
+  REVIEW
+  LOGIN
+  LOGOUT
+  SUBMIT
+  APPROVE
+  REJECT
+  ASSIGN
+  COMMENT
+  UPLOAD
+  STATUS_CHANGE
+}
+
+enum AttachmentEntity {
+  TASK
+  TASK_COMMENT
+  DAILY_LOG
+  PROJECT
+  COMPANY
+}
+
+enum TaskApprovalStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+enum ProposalType {
+  WORKSHOP
+  TRAINING
+  RETREAT
+  PROJECT
+  OTHER
+}
+
+enum ProposalScheduleType {
+  ONE_DAY
+  MULTI_DAYS
+}
+
+enum ProposalLocationType {
+  STUDIO
+  OUTDOOR
+  OVERSEAS
+  REMOTE
+  HYBRID
+}
+
+enum ProposalStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REWORK
+  REJECTED
+  CONVERTED
+}
+
+// ─────────────────────── AUTH (Better Auth) ───────────────────────
+
+model User {
+  id                     String                  @id @default(cuid())
+  name                   String
+  email                  String                  @unique
+  emailVerified          Boolean                 @default(false)
+  image                  String?
+  role                   Role                    @default(INTERN)
+  roleId                 String?
+  isSystemAdmin          Boolean                 @default(false)
+  hierarchyLevel         Int?                    @default(4)
+  companyId              String?
+  departmentId           String?
+  phone                  String?
+  designation            String?
+  isActive               Boolean                 @default(true)
+  lastActiveAt           DateTime?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  deletedAt              DateTime?
+
+  company                Company?                @relation(fields: [companyId], references: [id])
+  orgRole                OrgRole?                @relation(fields: [roleId], references: [id])
+  department             Department?             @relation(fields: [departmentId], references: [id])
+  sessions               Session[]
+  accounts               Account[]
+  studentProfile         StudentProfile?
+  teamMemberships        TeamMember[]
+  assignedTasks          Task[]                  @relation("TaskAssignee")
+  createdTasks           Task[]                  @relation("TaskCreator")
+  submittedTaskApprovals TaskApproval[]          @relation("TaskApprovalSubmitter")
+  reviewedTaskApprovals  TaskApproval[]          @relation("TaskApprovalReviewer")
+  taskComments           TaskComment[]           @relation("TaskCommentAuthor")
+  dailyLogs              DailyLog[]
+  attendance             Attendance[]
+  notifications          Notification[]
+  reviewsGiven           Review[]                @relation("Reviewer")
+  reviewsReceived        Review[]                @relation("Reviewee")
+  activityLogs           ActivityLog[]
+  mentorProjects         ProjectMentor[]
+  studentProjects        ProjectStudent[]
+  repoLinks              RepoLink[]              @relation("UserRepoLinks")
+  addedRepoLinks         RepoLink[]              @relation("AddedRepoLinks")
+  documents              Document[]              @relation("DocumentOwner")
+  uploads                Attachment[]
+  uploadedAttachments    Attachment[]            @relation("UploadedAttachments")
+  snapshots              PerformanceSnapshot[]
+  dailyTimelines         DailyTimeline[]
+  taskAcknowledgements   TaskAcknowledgement[]
+  userPermissionOverrides UserPermissionOverride[]
+  proposalsCreated       Proposal[]              @relation("ProposalCreator")
+  proposalsTeaching      Proposal[]              @relation("ProposalTeacher")
+  proposalsReviewing     Proposal[]              @relation("ProposalReviewer")
+
+  @@index([companyId])
+  @@index([role])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+// ─────────────────────────── COMPANY ───────────────────────────
+
+model Company {
+  id                 String                @id @default(cuid())
+  name               String
+  slug               String                @unique
+  description        String?
+  logoUrl            String?
+  bannerUrl          String?
+  website            String?
+  industry           String?
+  contactPerson      String?
+  contactEmail       String?
+  contactPhone       String?
+  internshipDuration String?
+  internshipType     InternshipType        @default(REMOTE)
+  status             CompanyStatus         @default(ACTIVE)
+  themeColor         String                @default("#6366f1")
+  techStack          String[]              @default([])
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  createdById        String?
+  deletedAt          DateTime?
+
+  users              User[]
+  batches            Batch[]
+  projects           Project[]
+  teams              Team[]
+  tasks              Task[]
+  dailyLogs          DailyLog[]
+  reviews            Review[]
+  attendance         Attendance[]
+  documents          Document[]
+  activityLogs       ActivityLog[]
+  holidays           Holiday[]
+  snapshots          PerformanceSnapshot[]
+  students           StudentProfile[]
+  proposals          Proposal[]
+
+  @@index([status])
+  @@map("company")
+}
+
+// ─────────────────────────── BATCH ───────────────────────────
+
+model Batch {
+  id          String           @id @default(cuid())
+  companyId   String
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  status      BatchStatus      @default(UPCOMING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  createdById String?
+  deletedAt   DateTime?
+
+  company     Company          @relation(fields: [companyId], references: [id])
+  students    StudentProfile[]
+  projects    Project[]
+
+  @@index([companyId])
+  @@map("batch")
+}
+
+// ─────────────────────── STUDENT PROFILE ───────────────────────
+
+model StudentProfile {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  companyId    String
+  batchId      String?
+  rollNumber   String?
+  department   String?
+  resumeUrl    String?
+  skills       String[]  @default([])
+  githubUrl    String?
+  linkedinUrl  String?
+  portfolioUrl String?
+  enrolledAt   DateTime  @default(now())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company      Company   @relation(fields: [companyId], references: [id])
+  batch        Batch?    @relation(fields: [batchId], references: [id])
+
+  @@index([companyId])
+  @@index([batchId])
+  @@map("student_profile")
+}
+
+// ─────────────────────────── PROJECT ───────────────────────────
+
+model Project {
+  id            String           @id @default(cuid())
+  companyId     String
+  batchId       String?
+  name          String
+  description   String?
+  objective     String?
+  techStack     String[]         @default([])
+  difficulty    Difficulty       @default(INTERMEDIATE)
+  deliverables  String?
+  repositoryUrl String?
+  deploymentUrl String?
+  imageUrl      String?
+  startDate     DateTime?
+  endDate       DateTime?
+  status        ProjectStatus    @default(PLANNING)
+  priority      Priority         @default(MEDIUM)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  createdById   String?
+  deletedAt     DateTime?
+
+  company       Company          @relation(fields: [companyId], references: [id])
+  batch         Batch?           @relation(fields: [batchId], references: [id])
+  milestones    Milestone[]
+  teams         Team[]
+  tasks         Task[]
+  mentors       ProjectMentor[]
+  students      ProjectStudent[]
+  repositories  Repository[]
+  dailyLogs     DailyLog[]
+  documents     Document[]
+  proposals     Proposal[]
+
+  @@index([companyId])
+  @@index([batchId])
+  @@index([status])
+  @@map("project")
+}
+
+model ProjectMentor {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_mentor")
+}
+
+model ProjectStudent {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@map("project_student")
+}
+
+model Milestone {
+  id          String          @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      MilestoneStatus @default(PENDING)
+  order       Int             @default(0)
+  createdById String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deletedAt   DateTime?
+
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+
+  @@index([projectId])
+  @@map("milestone")
+}
+
+// ──────────────────────────── TEAM ────────────────────────────
+
+model Team {
+  id          String       @id @default(cuid())
+  companyId   String
+  projectId   String?
+  name        String
+  description String?
+  createdById String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+
+  company     Company      @relation(fields: [companyId], references: [id])
+  project     Project?     @relation(fields: [projectId], references: [id])
+  members     TeamMember[]
+
+  @@index([companyId])
+  @@index([projectId])
+  @@map("team")
+}
+
+model TeamMember {
+  id        String    @id @default(cuid())
+  teamId    String
+  userId    String
+  role      TeamRole?
+  isLeader  Boolean   @default(false)
+  joinedAt  DateTime  @default(now())
+
+  team      Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([userId])
+  @@map("team_member")
+}
+
+// ─────────────────────────── TASK ───────────────────────────
+
+model Task {
+  id               String                @id @default(cuid())
+  companyId        String?
+  projectId        String?
+  milestoneId      String?
+  parentId         String?
+  title            String
+  description      String?
+  status           TaskStatus            @default(PENDING)
+  priority         Priority              @default(MEDIUM)
+  deadline         DateTime?
+  estimatedHours   Float?
+  actualHours      Float?
+  order            Float                 @default(0)
+  assigneeId       String?
+  completedAt      DateTime?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  createdById      String?
+  deletedAt        DateTime?
+
+  company          Company?              @relation(fields: [companyId], references: [id])
+  project          Project?              @relation(fields: [projectId], references: [id])
+  milestone        Milestone?            @relation(fields: [milestoneId], references: [id])
+  parent           Task?                 @relation("Subtasks", fields: [parentId], references: [id])
+  subtasks         Task[]                @relation("Subtasks")
+  assignee         User?                 @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdBy        User?                 @relation("TaskCreator", fields: [createdById], references: [id])
+  approval         TaskApproval?
+  comments         TaskComment[]
+  dependents       TaskDependency[]      @relation("BlockingTask")
+  dependencies     TaskDependency[]      @relation("DependentTask")
+  dailyLogs        DailyLog[]
+  acknowledgements TaskAcknowledgement[]
+
+  @@index([companyId])
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([parentId])
+  @@map("task")
+}
+
+model TaskDependency {
+  id          String   @id @default(cuid())
+  taskId      String
+  dependsOnId String
+  createdAt   DateTime @default(now())
+
+  task        Task     @relation("DependentTask", fields: [taskId], references: [id], onDelete: Cascade)
+  dependsOn   Task     @relation("BlockingTask", fields: [dependsOnId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, dependsOnId])
+  @@map("task_dependency")
+}
+
+model TaskComment {
+  id        String    @id @default(cuid())
+  taskId    String
+  authorId  String
+  content   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  task      Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User      @relation("TaskCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([authorId])
+  @@map("task_comment")
+}
+
+model Attachment {
+  id           String           @id @default(cuid())
+  entityType   AttachmentEntity
+  entityId     String
+  userId       String?
+  uploadedById String?
+  fileName     String
+  fileSize     Int
+  mimeType     String
+  url          String?
+  filePath     String?
+  createdAt    DateTime         @default(now())
+  deletedAt    DateTime?
+
+  user         User?            @relation(fields: [userId], references: [id])
+  uploadedBy   User?            @relation("UploadedAttachments", fields: [uploadedById], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("attachment")
+}
+
+// ───────────────────────── DAILY LOG ─────────────────────────
+
+model DailyLog {
+  id               String         @id @default(cuid())
+  studentId        String
+  companyId        String
+  projectId        String?
+  taskId           String?
+  date             DateTime       @db.Date
+  hoursWorked      Float          @default(0)
+  hoursSpent       Float          @default(0)
+  description      String         @default("")
+  tasksCompleted   String         @default("")
+  tasksPlanned     String         @default("")
+  learnings        String?
+  blockers         String?
+  achievements     String?
+  tomorrowPlan     String?
+  repositoryLink   String?
+  deploymentLink   String?
+  driveLink        String?
+  notes            String?
+  status           DailyLogStatus @default(SUBMITTED)
+  reviewedById     String?
+  reviewedAt       DateTime?
+  reviewerFeedback String?
+  rating           Int?
+  commitLinks      String[]       @default([])
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  deletedAt        DateTime?
+
+  student          User           @relation(fields: [studentId], references: [id])
+  company          Company        @relation(fields: [companyId], references: [id])
+  project          Project?       @relation(fields: [projectId], references: [id])
+  task             Task?          @relation(fields: [taskId], references: [id])
+  reviews          Review[]
+
+  @@unique([studentId, date])
+  @@index([companyId, date])
+  @@index([status])
+  @@map("daily_log")
+}
+
+// ─────────────────────────── REVIEW ───────────────────────────
+
+model Review {
+  id         String           @id @default(cuid())
+  companyId  String?
+  targetType ReviewTargetType
+  targetId   String
+  dailyLogId String?
+  revieweeId String
+  reviewerId String
+  verdict    ReviewVerdict
+  rating     Int?
+  feedback   String
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  deletedAt  DateTime?
+
+  company    Company?         @relation(fields: [companyId], references: [id])
+  dailyLog   DailyLog?        @relation(fields: [dailyLogId], references: [id])
+  reviewee   User             @relation("Reviewee", fields: [revieweeId], references: [id])
+  reviewer   User             @relation("Reviewer", fields: [reviewerId], references: [id])
+
+  @@index([companyId])
+  @@index([targetType, targetId])
+  @@index([revieweeId])
+  @@map("review")
+}
+
+// ───────────────────────── REPOSITORY ─────────────────────────
+
+model Repository {
+  id            String     @id @default(cuid())
+  projectId     String
+  companyId     String?
+  name          String
+  url           String
+  defaultBranch String     @default("main")
+  createdById   String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  deletedAt     DateTime?
+
+  project       Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  links         RepoLink[]
+
+  @@index([projectId])
+  @@map("repository")
+}
+
+model RepoLink {
+  id           String        @id @default(cuid())
+  repositoryId String
+  userId       String?
+  addedById    String?
+  type         RepoLinkType?
+  linkType     RepoLinkType  @default(COMMIT)
+  url          String
+  title        String?
+  metadata     Json?
+  createdAt    DateTime      @default(now())
+  deletedAt    DateTime?
+
+  repository   Repository    @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  user         User?         @relation("UserRepoLinks", fields: [userId], references: [id])
+  addedBy      User?         @relation("AddedRepoLinks", fields: [addedById], references: [id])
+
+  @@index([repositoryId])
+  @@index([userId])
+  @@index([addedById])
+  @@map("repo_link")
+}
+
+// ───────────────────────── ATTENDANCE ─────────────────────────
+
+model Attendance {
+  id             String           @id @default(cuid())
+  userId         String
+  companyId      String
+  date           DateTime         @db.Date
+  loginAt        DateTime?
+  logoutAt       DateTime?
+  workingMinutes Int              @default(0)
+  status         AttendanceStatus @default(PRESENT)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user           User             @relation(fields: [userId], references: [id])
+  company        Company          @relation(fields: [companyId], references: [id])
+
+  @@unique([userId, date])
+  @@index([companyId, date])
+  @@map("attendance")
+}
+
+// ──────────────────── PERFORMANCE SNAPSHOT ────────────────────
+
+model PerformanceSnapshot {
+  id                  String   @id @default(cuid())
+  studentId           String
+  companyId           String
+  date                DateTime @db.Date
+  submissionScore     Float
+  attendanceScore     Float
+  taskCompletionScore Float
+  reviewScore         Float
+  deadlineScore       Float
+  githubScore         Float
+  overallScore        Float
+  band                String
+  createdAt           DateTime @default(now())
+
+  student             User     @relation(fields: [studentId], references: [id])
+  company             Company  @relation(fields: [companyId], references: [id])
+
+  @@unique([studentId, date])
+  @@index([companyId, date])
+  @@map("performance_snapshot")
+}
+
+// ──────────────────────── NOTIFICATION ────────────────────────
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType @default(GENERAL)
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notification")
+}
+
+// ────────────────────────── DOCUMENT ──────────────────────────
+
+model Document {
+  id          String       @id @default(cuid())
+  companyId   String?
+  ownerId     String?
+  projectId   String?
+  type        DocumentType @default(OTHER)
+  title       String
+  filePath    String
+  fileName    String
+  fileSize    Int?
+  mimeType    String?
+  issuedAt    DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdById String?
+  deletedAt   DateTime?
+
+  company     Company?     @relation(fields: [companyId], references: [id])
+  owner       User?        @relation("DocumentOwner", fields: [ownerId], references: [id])
+  project     Project?     @relation(fields: [projectId], references: [id])
+
+  @@index([companyId])
+  @@index([ownerId])
+  @@index([projectId])
+  @@map("document")
+}
+
+// ───────────────────────── ACTIVITY LOG ─────────────────────────
+
+model ActivityLog {
+  id         String         @id @default(cuid())
+  companyId  String?
+  userId     String
+  action     ActivityAction
+  entityType String
+  entityId   String?
+  entityName String?
+  details    Json?
+  ipAddress  String?
+  createdAt  DateTime       @default(now())
+
+  company    Company?       @relation(fields: [companyId], references: [id])
+  user       User           @relation(fields: [userId], references: [id])
+
+  @@index([companyId, createdAt])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@map("activity_log")
+}
+
+// ───────────────────────── SETTINGS ─────────────────────────
+
+model Holiday {
+  id        String   @id @default(cuid())
+  companyId String?
+  name      String
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  company   Company? @relation(fields: [companyId], references: [id])
+
+  @@index([date])
+  @@map("holiday")
+}
+
+model AcademicYear {
+  id        String   @id @default(cuid())
+  label     String   @unique
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("academic_year")
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String?
+  createdAt DateTime @default(now())
+
+  users     User[]
+
+  @@map("department")
+}
+
+model Technology {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String?
+  createdAt DateTime @default(now())
+
+  @@map("technology")
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  subject   String
+  body      String
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@map("email_template")
+}
+
+model ReminderSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  hour      Int      @default(18)
+  minute    Int      @default(0)
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@map("reminder_setting")
+}
+
+// ──────────────────── DAILY WORKFLOW TRACKING ────────────────────
+
+model DailyTimeline {
+  id               String    @id @default(cuid())
+  studentId        String
+  date             DateTime  @db.Date
+  loginAt          DateTime?
+  workLogUpdatedAt DateTime?
+  submittedAt      DateTime?
+  logoutAt         DateTime?
+  workingMinutes   Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  student          User      @relation(fields: [studentId], references: [id])
+
+  @@unique([studentId, date])
+  @@index([studentId])
+  @@map("daily_timeline")
+}
+
+model TaskAcknowledgement {
+  id        String                @id @default(cuid())
+  taskId    String
+  studentId String
+  date      DateTime              @db.Date
+  status    AcknowledgementStatus
+  createdAt DateTime              @default(now())
+
+  task      Task                  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  student   User                  @relation(fields: [studentId], references: [id])
+
+  @@unique([taskId, studentId, date])
+  @@index([studentId, date])
+  @@map("task_acknowledgement")
+}
+
+// ───────────────────────── ORG ROLE ─────────────────────────
+
+model OrgRole {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  hierarchyLevel Int?     @default(4)
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  users          User[]
+
+  @@map("org_role")
+}
+
+// ───────────────────────── TASK APPROVAL ─────────────────────────
+
+model TaskApproval {
+  id            String             @id @default(cuid())
+  taskId        String             @unique
+  status        TaskApprovalStatus @default(PENDING)
+  submittedById String
+  reviewedById  String?
+  reviewedAt    DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  task          Task               @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  submittedBy   User               @relation("TaskApprovalSubmitter", fields: [submittedById], references: [id])
+  reviewedBy    User?              @relation("TaskApprovalReviewer", fields: [reviewedById], references: [id])
+
+  @@map("task_approval")
+}
+
+// ───────────────────────── PROPOSAL ─────────────────────────
+
+model Proposal {
+  id             String               @id @default(cuid())
+  title          String
+  type           ProposalType
+  scheduleType   ProposalScheduleType
+  locationType   ProposalLocationType
+  locationName   String?
+  startDate      DateTime?
+  endDate        DateTime?
+  dailyHours     Float?
+  totalHours     Float?
+  capacity       Int?
+  teacherName    String?
+  pricing        Float?
+  budget         Float?
+  description    String
+  objectives     String?
+  targetAudience String?
+  documentUrl    String?
+  mediaUrl       String?
+  status         ProposalStatus       @default(DRAFT)
+  reviewFeedback String?
+  reviewRating   Int?
+  reviewedAt     DateTime?
+
+  companyId      String
+  createdById    String
+  teacherId      String?
+  reviewerId     String?
+  projectId      String?
+
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  deletedAt      DateTime?
+
+  company        Company              @relation(fields: [companyId], references: [id])
+  createdBy      User                 @relation("ProposalCreator", fields: [createdById], references: [id])
+  teacher        User?                @relation("ProposalTeacher", fields: [teacherId], references: [id])
+  reviewer       User?                @relation("ProposalReviewer", fields: [reviewerId], references: [id])
+  project        Project?             @relation(fields: [projectId], references: [id])
+
+  @@index([companyId])
+  @@index([createdById])
+  @@index([status])
+  @@map("proposal")
+}
+
+// ───────────────────────── PERMISSIONS ─────────────────────────
+
+model SystemPermission {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  category    String   @default("System")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_permission")
+}
+
+model RolePermission {
+  id             String   @id @default(cuid())
+  roleId         String
+  permissionCode String
+  allowed        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([roleId, permissionCode])
+  @@map("role_permission")
+}
+
+model DynamicRolePermission {
+  id             String   @id @default(cuid())
+  roleId         String
+  permissionCode String
+  allowed        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([roleId, permissionCode])
+  @@map("dynamic_role_permission")
+}
+
+model UserPermissionOverride {
+  id             String   @id @default(cuid())
+  userId         String
+  permissionCode String
+  allowed        Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionCode])
+  @@map("user_permission_override")
+}

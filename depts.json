@@ -1,0 +1,166 @@
+{
+  "status": true,
+  "data": [
+    {
+      "id": 4,
+      "name": "Designing",
+      "code": "DESIGNIN",
+      "description": "Design UI, Banners, Social Media Post",
+      "head_user_id": 360637,
+      "roles": []
+    },
+    {
+      "id": 2,
+      "name": "Finance",
+      "code": "FIN",
+      "description": "Accounts, payroll, revenue management",
+      "head_user_id": 360638,
+      "roles": [
+        {
+          "id": 6,
+          "department_id": 2,
+          "name": "Finance Manager",
+          "role": "Finance Manager",
+          "hierarchy_level": 1,
+          "parent_role_id": null,
+          "parent_role_name": null,
+          "is_sub_role": false,
+          "sub_role": null,
+          "main_role": "Finance Manager",
+          "description": "Financial oversight and budgeting"
+        },
+        {
+          "id": 7,
+          "department_id": 2,
+          "name": "Billing Executive",
+          "role": "Billing Executive",
+          "hierarchy_level": 3,
+          "parent_role_id": 6,
+          "parent_role_name": "Finance Manager",
+          "is_sub_role": true,
+          "sub_role": "Billing Executive",
+          "main_role": "Finance Manager",
+          "description": "Invoices and daily reconciliations"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Front Desk & Ops",
+      "code": "OPS",
+      "description": "Reception, customer onboarding, studio operations",
+      "head_user_id": 360610,
+      "roles": [
+        {
+          "id": 8,
+          "department_id": 3,
+          "name": "Front Desk Lead",
+          "role": "Front Desk Lead",
+          "hierarchy_level": 1,
+          "parent_role_id": null,
+          "parent_role_name": null,
+          "is_sub_role": false,
+          "sub_role": null,
+          "main_role": "Front Desk Lead",
+          "description": "Front desk management"
+        },
+        {
+          "id": 9,
+          "department_id": 3,
+          "name": "Receptionist / Host",
+          "role": "Receptionist / Host",
+          "hierarchy_level": 3,
+          "parent_role_id": 8,
+          "parent_role_name": "Front Desk Lead",
+          "is_sub_role": true,
+          "sub_role": "Receptionist / Host",
+          "main_role": "Front Desk Lead",
+          "description": "Member check-ins, phone inquiries"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Teaching",
+      "code": "TEACHING",
+      "description": "Take Classes, PY, Manage Event",
+      "head_user_id": 360610,
+      "roles": [
+        {
+          "id": 11,
+          "department_id": 5,
+          "name": "Event Manager",
+          "role": "Event Manager",
+          "hierarchy_level": 3,
+          "parent_role_id": null,
+          "parent_role_name": null,
+          "is_sub_role": false,
+          "sub_role": null,
+          "main_role": "Event Manager",
+          "description": "Conduct and Mange Events"
+        },
+        {
+          "id": 10,
+          "department_id": 5,
+          "name": "Instructor",
+          "role": "Instructor",
+          "hierarchy_level": 3,
+          "parent_role_id": null,
+          "parent_role_name": null,
+          "is_sub_role": false,
+          "sub_role": null,
+          "main_role": "Instructor",
+          "description": "Take Classes"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "Technology",
+      "code": "TECH",
+      "description": "Software development, infrastructure, and IT support",
+      "head_user_id": 360906,
+      "roles": [
+        {
+          "id": 1,
+          "department_id": 1,
+          "name": "Tech Lead / Head of Tech",
+          "role": "Tech Lead / Head of Tech",
+          "hierarchy_level": 1,
+          "parent_role_id": null,
+          "parent_role_name": null,
+          "is_sub_role": false,
+          "sub_role": null,
+          "main_role": "Tech Lead / Head of Tech",
+          "description": "Oversees tech development and assigns tasks"
+        },
+        {
+          "id": 2,
+          "department_id": 1,
+          "name": "Senior Backend Developer",
+          "role": "Senior Backend Developer",
+          "hierarchy_level": 2,
+          "parent_role_id": 1,
+          "parent_role_name": "Tech Lead / Head of Tech",
+          "is_sub_role": true,
+          "sub_role": "Senior Backend Developer",
+          "main_role": "Tech Lead / Head of Tech",
+          "description": "API architecture, server management, DB design"
+        },
+        {
+          "id": 4,
+          "department_id": 1,
+          "name": "Frontend Developer",
+          "role": "Frontend Developer",
+          "hierarchy_level": 3,
+          "parent_role_id": 1,
+          "parent_role_name": "Tech Lead / Head of Tech",
+          "is_sub_role": true,
+          "sub_role": "Frontend Developer",
+          "main_role": "Tech Lead / Head of Tech",
+          "description": "UI implementation and web app interfaces"
+        }
+      ]
+    }
+  ]
+}

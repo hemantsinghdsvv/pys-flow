@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pragya Yog School — Intern Portal</title>
+<style>
+    :root {
+        --primary: #d97706;
+        --primary-hover: #b45309;
+        --primary-soft: #fffbeb;
+        --primary-border: #fde68a;
+        --batch: #6366f1;
+        --batch-soft: #eef2ff;
+        --batch-border: #c7d2fe;
+        --indiv: #0891b2;
+        --indiv-soft: #ecfeff;
+        --indiv-border: #a5f3fc;
+        --bg: #f8fafc;
+        --card-bg: #ffffff;
+        --text: #1e293b;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 24px 48px -16px rgba(15, 23, 42, 0.28);
+    }
+    * { box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg); color: var(--text);
+        margin: 0; padding: 24px; -webkit-font-smoothing: antialiased; min-height: 100vh;
+    }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    .card {
+        background: var(--card-bg); border: 1px solid var(--border);
+        border-radius: 16px; box-shadow: var(--shadow);
+    }
+
+    /* ================= LOGIN ================= */
+    #loginScreen {
+        min-height: calc(100vh - 48px);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .login-card {
+        width: 100%; max-width: 660px; background: #fff;
+        border: 1px solid var(--border); border-radius: 22px;
+        box-shadow: var(--shadow-lg); padding: 40px 34px 30px;
+        text-align: center; animation: rise 0.4s cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+    @keyframes rise {
+        from { opacity: 0; transform: translateY(14px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .login-logo {
+        width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 22px;
+        background: linear-gradient(135deg, var(--primary), #f59e0b);
+        color: #fff; display: grid; place-items: center;
+        font-size: 34px; line-height: 1;
+        box-shadow: 0 10px 24px -8px rgba(217, 119, 6, 0.6);
+    }
+    .login-card h1 { margin: 0 0 6px; font-size: 1.5rem; letter-spacing: -0.02em; }
+    .login-card .login-sub { margin: 0 0 30px; font-size: 0.92rem; color: var(--muted); }
+    .login-prompt {
+        font-size: 0.72rem; font-weight: 800; letter-spacing: 0.09em;
+        text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+    }
+    .intern-pick-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px; text-align: left;
+    }
+    .pick-card {
+        display: flex; align-items: center; gap: 13px;
+        padding: 14px 16px; border: 1.5px solid var(--border);
+        border-radius: 14px; background: #fff; cursor: pointer;
+        transition: all 0.18s ease; font-family: inherit; text-align: left; width: 100%;
+    }
+    .pick-card:hover {
+        border-color: var(--primary); background: var(--primary-soft);
+        transform: translateY(-2px); box-shadow: 0 8px 18px -8px rgba(217, 119, 6, 0.45);
+    }
+    .pick-card:active { transform: translateY(0); }
+    .pick-avatar {
+        width: 44px; height: 44px; border-radius: 50%; flex: 0 0 auto;
+        display: grid; place-items: center; font-size: 0.85rem; font-weight: 800; color: #fff;
+        background: linear-gradient(135deg, var(--primary), #f59e0b);
+    }
+    .pick-info { flex: 1; min-width: 0; }
+    .pick-name {
+        font-size: 0.95rem; font-weight: 700;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        display: flex; align-items: center; gap: 7px;
+    }
+    .pick-meta { font-size: 0.76rem; color: var(--muted); font-weight: 600; margin-top: 3px; }
+    .pick-arrow { color: #cbd5e1; font-size: 1.15rem; flex: 0 0 auto; transition: all 0.18s ease; }
+    .pick-card:hover .pick-arrow { color: var(--primary); transform: translateX(3px); }
+
+    .login-foot { margin: 26px 0 0; font-size: 0.78rem; color: #94a3b8; line-height: 1.6; }
+    .login-empty {
+        padding: 34px 20px; text-align: center; font-size: 0.88rem; color: var(--muted);
+        border: 1px dashed var(--border); border-radius: 14px; background: #fcfdfe;
+    }
+
+    /* ================= BATCH TAG ================= */
+    .batch-tag {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 0.68rem; font-weight: 800; letter-spacing: 0.03em;
+        padding: 2px 8px; border-radius: 999px;
+        background: var(--batch-soft); color: var(--batch);
+        border: 1px solid var(--batch-border); white-space: nowrap;
+    }
+    .batch-tag.individual {
+        background: var(--indiv-soft); color: var(--indiv); border-color: var(--indiv-border);
+    }
+
+    /* ================= APP HEADER ================= */
+    #appScreen { display: none; }
+    #appScreen.on { display: block; animation: rise 0.35s ease; }
+
+    .app-bar {
+        display: flex; align-items: center; gap: 14px;
+        padding: 14px 18px; margin-bottom: 16px;
+        background: #fff; border: 1px solid var(--border);
+        border-radius: 16px; box-shadow: var(--shadow);
+        flex-wrap: wrap;
+    }
+    .bar-avatar {
+        width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto;
+        display: grid; place-items: center; font-size: 0.92rem; font-weight: 800; color: #fff;
+        background: linear-gradient(135deg, var(--primary), #f59e0b);
+    }
+    .bar-info { flex: 1 1 200px; min-width: 0; }
+    .bar-name-row {
+        display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+    }
+    .bar-name {
+        font-size: 1.02rem; font-weight: 700; letter-spacing: -0.01em;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .bar-role { font-size: 0.76rem; color: var(--muted); font-weight: 600; margin-top: 2px; }
+    .bar-actions { display: flex; gap: 7px; flex: 0 0 auto; align-items: center; }
+
+    .batch-select {
+        font-family: inherit; font-size: 0.78rem; font-weight: 700;
+        padding: 7px 10px; border-radius: 9px;
+        border: 1px solid var(--batch-border); background: var(--batch-soft);
+        color: var(--batch); cursor: pointer;
+    }
+    .batch-select:focus {
+        outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+    }
+
+    .icon-btn {
+        font-family: inherit; font-size: 0.82rem; font-weight: 700;
+        padding: 8px 14px; border-radius: 10px;
+        border: 1px solid var(--border); background: #fff; color: var(--muted);
+        cursor: pointer; transition: all 0.15s ease;
+        display: inline-flex; align-items: center; gap: 5px;
+    }
+    .icon-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+    .icon-btn.danger:hover { border-color: #fca5a5; color: #dc2626; background: #fef2f2; }
+    .icon-btn.spin { pointer-events: none; opacity: 0.6; }
+    .icon-btn.spin .refresh-glyph { animation: spin 0.6s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ================= HERO ================= */
+    .hero { padding: 22px 24px; margin-bottom: 16px; }
+    .hero-top {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 18px; flex-wrap: wrap; margin-bottom: 18px;
+    }
+    .hero-marks { display: flex; align-items: baseline; gap: 4px; }
+    .hero-marks-num {
+        font-size: 2.5rem; font-weight: 800; color: #7c3aed;
+        line-height: 1; letter-spacing: -0.03em;
+    }
+    .hero-marks-denom { font-size: 1.15rem; font-weight: 700; color: #c4b5fd; }
+    .hero-marks-label {
+        font-size: 0.72rem; font-weight: 800; letter-spacing: 0.07em;
+        text-transform: uppercase; color: var(--muted); margin-top: 6px;
+    }
+    .hero-msg { font-size: 0.86rem; color: var(--muted); max-width: 36ch; line-height: 1.5; }
+    .hero-msg b { color: var(--text); }
+
+    .bar { height: 10px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+    .bar-fill {
+        height: 100%; width: 0%; border-radius: 999px;
+        background: linear-gradient(90deg, var(--primary), #f59e0b);
+        transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hero-bar-row {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; margin-bottom: 7px;
+    }
+    .hero-bar-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+    .hero-bar-pct { font-size: 0.8rem; font-weight: 800; color: var(--primary); }
+
+    .tiles {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 11px; margin-top: 18px;
+    }
+    @media (max-width: 560px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+    .tile { padding: 13px 14px; border-radius: 12px; background: #fcfdfe; border: 1px solid var(--border); }
+    .tile-val { font-size: 1.35rem; font-weight: 800; line-height: 1; }
+    .tile-val.done { color: #059669; }
+    .tile-val.pending { color: var(--primary); }
+    .tile-val.overdue { color: #dc2626; }
+    .tile-val.batch { color: var(--batch); }
+    .tile-lab {
+        margin-top: 6px; font-size: 0.66rem; font-weight: 800;
+        letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+    }
+
+    /* ================= NEXT UP ================= */
+    .nextup {
+        padding: 15px 18px; margin-bottom: 16px;
+        background: linear-gradient(135deg, #fffbeb, #fff7ed);
+        border: 1px solid var(--primary-border); border-radius: 16px;
+        display: flex; align-items: center; gap: 14px; box-shadow: var(--shadow);
+    }
+    .nextup-icon {
+        width: 42px; height: 42px; border-radius: 12px; flex: 0 0 auto;
+        background: #fff; display: grid; place-items: center;
+        font-size: 1.15rem; box-shadow: 0 2px 6px rgba(217, 119, 6, 0.18);
+    }
+    .nextup-body { flex: 1; min-width: 0; }
+    .nextup-label {
+        font-size: 0.66rem; font-weight: 800; letter-spacing: 0.08em;
+        text-transform: uppercase; color: var(--primary-hover); margin-bottom: 3px;
+    }
+    .nextup-text { font-size: 0.9rem; font-weight: 700; line-height: 1.4; }
+    .nextup-meta { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    /* ================= TOOLBAR ================= */
+    .toolbar { padding: 12px 14px; margin-bottom: 12px; }
+    .toolbar-row {
+        display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .toolbar-row + .toolbar-row { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+    .toolbar-label {
+        font-size: 0.66rem; font-weight: 800; letter-spacing: 0.07em;
+        text-transform: uppercase; color: var(--muted); margin-right: 4px;
+    }
+
+    .chip {
+        font-family: inherit; font-size: 0.82rem; font-weight: 700;
+        padding: 8px 15px; border-radius: 999px;
+        border: 1px solid var(--border); background: #fff; color: #475569;
+        cursor: pointer; transition: all 0.16s ease;
+        display: inline-flex; align-items: center; gap: 6px;
+    }
+    .chip:hover { border-color: var(--primary); color: var(--primary); }
+    .chip.active {
+        background: var(--primary); border-color: var(--primary); color: #fff;
+        box-shadow: 0 3px 8px -2px rgba(217, 119, 6, 0.5);
+    }
+    .chip.chip-batch.active {
+        background: var(--batch); border-color: var(--batch); color: #fff;
+        box-shadow: 0 3px 8px -2px rgba(99, 102, 241, 0.5);
+    }
+    .chip.chip-indiv.active {
+        background: var(--indiv); border-color: var(--indiv); color: #fff;
+        box-shadow: 0 3px 8px -2px rgba(8, 145, 178, 0.5);
+    }
+    .chip-count {
+        display: inline-block; font-size: 0.72rem; font-weight: 800;
+        padding: 0 6px; border-radius: 999px;
+        background: rgba(15, 23, 42, 0.08);
+    }
+    .chip.active .chip-count { background: rgba(255, 255, 255, 0.28); }
+
+    .seg {
+        display: inline-flex; background: #f1f5f9; border-radius: 10px;
+        padding: 3px; gap: 2px;
+    }
+    .seg button {
+        font-family: inherit; font-size: 0.8rem; font-weight: 700;
+        padding: 7px 15px; border: none; border-radius: 8px;
+        background: transparent; color: var(--muted);
+        cursor: pointer; transition: all 0.15s ease;
+        display: inline-flex; align-items: center; gap: 5px;
+    }
+    .seg button:hover { color: var(--primary); }
+    .seg button.active {
+        background: #fff; color: var(--primary);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .toolbar select {
+        font-family: inherit; font-size: 0.8rem; font-weight: 700;
+        padding: 8px 12px; border: 1px solid var(--border); border-radius: 10px;
+        background: #fff; color: var(--text); cursor: pointer;
+    }
+    .toolbar select:focus {
+        outline: none; border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.13);
+    }
+    .toolbar-spacer { flex: 1; }
+
+    /* ================= NOTICE ================= */
+    .notice {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 12px 15px; margin-bottom: 16px;
+        background: #eff6ff; border: 1px solid #bfdbfe;
+        border-radius: 12px; font-size: 0.82rem; color: #1e40af; line-height: 1.55;
+    }
+    .notice b { font-weight: 800; }
+    .notice-icon { flex: 0 0 auto; font-size: 1rem; line-height: 1.4; }
+
+    /* ================= TASK GROUPS ================= */
+    .group { margin-bottom: 20px; }
+    .group-head {
+        display: flex; align-items: center; gap: 10px;
+        padding: 0 4px 9px; margin-bottom: 9px;
+        border-bottom: 1px solid var(--border);
+    }
+    .group-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--primary); flex: 0 0 auto;
+    }
+    .group-dot.batch { background: var(--batch); }
+    .group-dot.today { background: #2563eb; }
+    .group-dot.overdue { background: #dc2626; }
+    .group-title {
+        font-size: 0.95rem; font-weight: 800; letter-spacing: -0.01em;
+        flex: 1; min-width: 0;
+    }
+    .group-sub { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
+    .group-count {
+        font-size: 0.75rem; font-weight: 700; color: var(--muted);
+        background: #f1f5f9; padding: 3px 10px; border-radius: 999px;
+    }
+
+    .week-block { margin-bottom: 4px; }
+    .week-label {
+        font-size: 0.68rem; font-weight: 800; letter-spacing: 0.07em;
+        text-transform: uppercase; color: var(--muted); padding: 12px 6px 7px;
+        display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ================= INTERN TASK ================= */
+    .itask {
+        display: flex; align-items: flex-start; gap: 11px;
+        padding: 13px 15px; margin-bottom: 8px;
+        background: #fff; border: 1px solid var(--border);
+        border-radius: 13px; transition: all 0.18s ease;
+        position: relative;
+    }
+    .itask:hover { border-color: var(--primary-border); box-shadow: var(--shadow); }
+    .itask.done { background: #f8fafc; }
+    .itask.overdue { border-color: #fecaca; background: #fffbfb; }
+    .itask.batch-task { border-left: 4px solid var(--batch); }
+    .itask.individual-task { border-left: 4px solid var(--indiv); }
+
+    .itask-check {
+        width: 21px; height: 21px; margin: 1px 0 0; flex: 0 0 auto;
+        accent-color: var(--primary); cursor: pointer;
+    }
+    .itask-body { flex: 1; min-width: 0; }
+    .itask-text {
+        font-size: 0.92rem; line-height: 1.5; font-weight: 600;
+        cursor: pointer; display: block;
+    }
+    .itask.done .itask-text { text-decoration: line-through; color: #94a3b8; font-weight: 500; }
+    .itask-meta { margin-top: 7px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    .badge {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 0.7rem; font-weight: 700;
+        padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+    }
+    .badge-type { color: #fff; }
+    .badge-date { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+    .badge-date.rescheduled { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+    .badge-date.overdue { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+    .badge-date.today { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+    .badge-staff { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .badge-shared { background: var(--batch-soft); color: var(--batch); border: 1px solid var(--batch-border); }
+    .badge-marks { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .badge-marks.perfect { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+    .badge-await { background: #fff7ed; color: #c2410c; border: 1px dashed #fdba74; }
+
+    .itask-note {
+        margin-top: 7px; font-size: 0.76rem; color: var(--muted); font-style: italic;
+    }
+
+    /* ================= EMPTY ================= */
+    .empty {
+        text-align: center; padding: 56px 24px;
+        border: 1px dashed var(--border); border-radius: 18px; background: #fff;
+    }
+    .empty-emoji { font-size: 2.6rem; margin-bottom: 12px; }
+    .empty h3 { margin: 0 0 7px; font-size: 1.05rem; }
+    .empty p { margin: 0; font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* ================= FOOTER / TOAST ================= */
+    .foot { text-align: center; font-size: 0.76rem; color: var(--muted); padding: 22px 0 6px; }
+    .toast {
+        position: fixed; left: 50%; bottom: 26px;
+        transform: translate(-50%, 140%);
+        background: #1e293b; color: #fff; font-size: 0.88rem; font-weight: 600;
+        padding: 13px 22px; border-radius: 12px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35);
+        transition: transform 0.38s cubic-bezier(0.34, 1.4, 0.64, 1);
+        z-index: 200; max-width: calc(100vw - 40px); text-align: center;
+    }
+    .toast.show { transform: translate(-50%, 0); }
+
+    @media (max-width: 620px) {
+        body { padding: 14px; }
+        .login-card { padding: 30px 20px 24px; border-radius: 18px; }
+        .login-card h1 { font-size: 1.25rem; }
+        .hero { padding: 18px 16px; }
+        .hero-marks-num { font-size: 2rem; }
+        .app-bar { padding: 12px 14px; gap: 11px; }
+        .bar-avatar { width: 40px; height: 40px; font-size: 0.82rem; }
+        .bar-actions .icon-btn .label { display: none; }
+        .itask { padding: 11px 12px; }
+        .toolbar { padding: 10px 12px; }
+        .toolbar-label { display: block; width: 100%; margin-bottom: 6px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginScreen">
+    <div class="login-card">
+        <div class="login-logo">ॐ</div>
+        <h1>Pragya Yog School</h1>
+        <p class="login-sub">Intern Portal — tasks, batches, schedule &amp; marks</p>
+
+        <div class="login-prompt">Select your name to continue</div>
+        <div class="intern-pick-grid" id="internPickGrid"></div>
+
+        <p class="login-foot">
+            No password needed. Your tasks are managed by the school coordinator.<br>
+            If your name isn’t listed, please contact the office.
+        </p>
+    </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="appScreen" class="wrap">
+
+    <div class="app-bar">
+        <div class="bar-avatar" id="barAvatar">—</div>
+        <div class="bar-info">
+            <div class="bar-name-row">
+                <span class="bar-name" id="barName">Intern</span>
+                <span class="batch-tag" id="barBatch">Batch 4</span>
+            </div>
+            <div class="bar-role">Yoga Intern · Pragya Yog School</div>
+        </div>
+        <div class="bar-actions">
+            <select class="batch-select" id="batchSelect" title="Your batch">
+                <option value="1">Batch 1</option>
+                <option value="2">Batch 2</option>
+                <option value="3">Batch 3</option>
+                <option value="4">Batch 4</option>
+                <option value="5">Batch 5</option>
+                <option value="6">Batch 6</option>
+            </select>
+            <button class="icon-btn" id="refreshBtn" type="button" title="Reload latest tasks">
+                <span class="refresh-glyph">↻</span><span class="label">Refresh</span>
+            </button>
+            <button class="icon-btn danger" id="logoutBtn" type="button">Log out</button>
+        </div>
+    </div>
+
+    <!-- Hero: marks + progress -->
+    <section class="hero card">
+        <div class="hero-top">
+            <div>
+                <div class="hero-marks">
+                    <span class="hero-marks-num" id="heroMarks">0</span>
+                    <span class="hero-marks-denom" id="heroMarksDenom">/0</span>
+                </div>
+                <div class="hero-marks-label">Marks earned</div>
+            </div>
+            <div class="hero-msg" id="heroMsg">
+                Complete tasks to earn marks. Your staff checker awards them.
+            </div>
+        </div>
+
+        <div class="hero-bar-row">
+            <span class="hero-bar-label">Overall task progress</span>
+            <span class="hero-bar-pct" id="heroPct">0%</span>
+        </div>
+        <div class="bar"><div class="bar-fill" id="heroFill"></div></div>
+
+        <div class="tiles">
+            <div class="tile">
+                <div class="tile-val" id="tileTotal">0</div>
+                <div class="tile-lab">Total Tasks</div>
+            </div>
+            <div class="tile">
+                <div class="tile-val batch" id="tileBatch">0</div>
+                <div class="tile-lab">Batch Tasks</div>
+            </div>
+            <div class="tile">
+                <div class="tile-val done" id="tileDone">0</div>
+                <div class="tile-lab">Completed</div>
+            </div>
+            <div class="tile">
+                <div class="tile-val overdue" id="tileOverdue">0</div>
+                <div class="tile-lab">Overdue</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Next up -->
+    <div class="nextup" id="nextUp" style="display:none;">
+        <div class="nextup-icon">⏭</div>
+        <div class="nextup-body">
+            <div class="nextup-label">Next up</div>
+            <div class="nextup-text" id="nextUpText"></div>
+            <div class="nextup-meta" id="nextUpMeta"></div>
+        </div>
+    </div>
+
+    <!-- Toolbar: filters + view -->
+    <section class="toolbar card">
+        <div class="toolbar-row">
+            <span class="toolbar-label">Show</span>
+            <button class="chip active" data-filter="all" type="button">
+                All <span class="chip-count" id="cAll">0</span>
+            </button>
+            <button class="chip chip-batch" data-filter="batch" type="button">
+                🏫 Batch <span class="chip-count" id="cBatch">0</span>
+            </button>
+            <button class="chip chip-indiv" data-filter="individual" type="button">
+                👤 Individual <span class="chip-count" id="cIndiv">0</span>
+            </button>
+            <button class="chip" data-filter="pending" type="button">
+                Pending <span class="chip-count" id="cPending">0</span>
+            </button>
+            <button class="chip" data-filter="done" type="button">
+                Done <span class="chip-count" id="cDone">0</span>
+            </button>
+            <button class="chip" data-filter="overdue" type="button">
+                Overdue <span class="chip-count" id="cOverdue">0</span>
+            </button>
+        </div>
+        <div class="toolbar-row">
+            <span class="toolbar-label">View</span>
+            <div class="seg" id="viewSeg">
+                <button type="button" data-view="month" class="active">Month</button>
+                <button type="button" data-view="week">Week</button>
+                <button type="button" data-view="day">Day</button>
+                <button type="button" data-view="flat">Flat</button>
+            </div>
+            <div class="toolbar-spacer"></div>
+            <select id="typeFilter" aria-label="Filter by task type">
+                <option value="">All types</option>
+            </select>
+        </div>
+    </section>
+
+    <div class="notice">
+        <span class="notice-icon">ℹ️</span>
+        <div>
+            <b>How marks work:</b> each task is worth <b>10 marks</b>.
+            Tick a task when you finish it, and your assigned staff checker will review and award marks.
+            You cannot change marks yourself.
+        </div>
+    </div>
+
+    <!-- Task list -->
+    <div id="taskList"></div>
+
+    <p class="foot">Pragya Yog School · Intern Portal · Data syncs from the main planner</p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ================= SHARED PLAN DATA ================= */
+    const PLAN = [
+        {
+            id: 'm1', title: 'Month 1 — Foundation & Observation',
+            weeks: [
+                { id: 'm1w1', title: 'Week 1', focus: 'Orientation', tasks: [
+                    'Attend orientation — school philosophy, ethics and daily schedule',
+                    'Study the Yamas and Niyamas with examples from daily life',
+                    'Observe 3 Hatha yoga classes and take structured notes',
+                    'Memorise the 12 steps of Surya Namaskar',
+                    'Start an internship journal with daily reflections'
+                ]},
+                { id: 'm1w2', title: 'Week 2', focus: 'Asana Basics', tasks: [
+                    'Practise and learn 20 standing asanas with Sanskrit names',
+                    'Study alignment cues for Tadasana, Vrikshasana and Trikonasana',
+                    'Assist the teacher in one class (props and setup)',
+                    'Learn basic anatomy: spine, major joints and muscle groups'
+                ]},
+                { id: 'm1w3', title: 'Week 3', focus: 'Breath & Pranayama', tasks: [
+                    'Learn Nadi Shodhana, Bhramari and Kapalbhati fundamentals',
+                    'Establish a daily 15-minute personal pranayama routine',
+                    'Observe a pranayama class and note the teaching language',
+                    'Study contraindications and safety for breathing practices'
+                ]},
+                { id: 'm1w4', title: 'Week 4', focus: 'Review & Assessment', tasks: [
+                    'Lead a 15-minute warm-up for a peer group',
+                    'Complete the Month 1 written assessment',
+                    'Submit the Month 1 reflection report to your mentor',
+                    'Set clear personal goals for Month 2'
+                ]}
+            ]
+        },
+        {
+            id: 'm2', title: 'Month 2 — Practice & Assisting',
+            weeks: [
+                { id: 'm2w1', title: 'Week 5', focus: 'Sequencing', tasks: [
+                    'Learn the structure of a 60-minute Hatha class',
+                    'Study peak pose, counter pose and compensation logic',
+                    'Build 2 sample sequences and present them for feedback'
+                ]},
+                { id: 'm2w2', title: 'Week 6', focus: 'Teaching Skills', tasks: [
+                    'Practise verbal cueing aloud for 5 different asanas',
+                    'Work on voice modulation and Sanskrit pronunciation',
+                    'Teach a 20-minute segment to your peer group'
+                ]},
+                { id: 'm2w3', title: 'Week 7', focus: 'Adjustments & Safety', tasks: [
+                    'Learn hands-on adjustments for 10 core asanas',
+                    'Study common injuries, modifications and contraindications',
+                    'Assist in 5 live classes from start to finish'
+                ]},
+                { id: 'm2w4', title: 'Week 8', focus: 'Meditation & Philosophy', tasks: [
+                    'Study selected sutras from Patanjali’s Yoga Sutras',
+                    'Learn a guided meditation and a Yoga Nidra script',
+                    'Lead a 10-minute guided relaxation session',
+                    'Submit the Month 2 reflection report'
+                ]}
+            ]
+        },
+        {
+            id: 'm3', title: 'Month 3 — Teaching & Certification',
+            weeks: [
+                { id: 'm3w1', title: 'Week 9', focus: 'Co-Teaching', tasks: [
+                    'Co-teach a full 60-minute class with your mentor',
+                    'Handle warm-up and cool-down independently',
+                    'Collect and review student feedback forms'
+                ]},
+                { id: 'm3w2', title: 'Week 10', focus: 'Independent Teaching', tasks: [
+                    'Teach 2 full classes solo under observation',
+                    'Design a themed class (backbends, hips or twists)',
+                    'Record one session and review it with your mentor'
+                ]},
+                { id: 'm3w3', title: 'Week 11', focus: 'Content & Community', tasks: [
+                    'Write 3 blog posts or social captions for the school',
+                    'Help organise a workshop or community yoga camp',
+                    'Build a personal sequence library and class playlist'
+                ]},
+                { id: 'm3w4', title: 'Week 12', focus: 'Assessment & Handover', tasks: [
+                    'Complete the final practical teaching assessment',
+                    'Submit your internship portfolio and journal',
+                    'Present key learnings to the school team',
+                    'Finish certification formalities and feedback session'
+                ]}
+            ]
+        }
+    ];
+
+    const WEEK_INDEX = {};
+    PLAN.forEach(function (m, mi) {
+        m.weeks.forEach(function (w, wi) { WEEK_INDEX[w.id] = mi * 4 + wi; });
+    });
+
+    const DEFAULT_INTERNS = [
+        { name: 'Priya Sharma',  batch: '4' },
+        { name: 'Rahul Verma',   batch: '4' },
+        { name: 'Ananya Iyer',   batch: '4' },
+        { name: 'Karan Mehta',   batch: '3' },
+        { name: 'Sneha Kapoor',  batch: '4' },
+        { name: 'Arjun Nair',    batch: '2' }
+    ];
+
+    /* ================= STORAGE ================= */
+    const STORAGE_KEY = 'pragya-internship-planner-v4';
+    const SESSION_KEY = 'pragya-intern-session-v1';
+
+    function uid(p) { return (p || 'x') + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+    function todayISO() {
+        const d = new Date();
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+
+    function fallbackState() {
+        return {
+            done: {}, edits: {}, custom: {}, removed: {},
+            planStart: todayISO(),
+            roster: {
+                interns: DEFAULT_INTERNS.map(function (d) {
+                    return { id: uid('i'), name: d.name, batch: d.batch };
+                }),
+                staff: [
+                    { id: uid('s'), name: 'Acharya Anand' },
+                    { id: uid('s'), name: 'Dr. Meera Joshi' },
+                    { id: uid('s'), name: 'Swami Prakash' }
+                ],
+                types: [
+                    { id: uid('tt'), name: 'Orientation', color: '#3b82f6' },
+                    { id: uid('tt'), name: 'Observation', color: '#8b5cf6' },
+                    { id: uid('tt'), name: 'Practice',    color: '#10b981' },
+                    { id: uid('tt'), name: 'Teaching',    color: '#f59e0b' },
+                    { id: uid('tt'), name: 'Assessment',  color: '#ef4444' },
+                    { id: uid('tt'), name: 'Report',      color: '#64748b' }
+                ]
+            }
+        };
+    }
+
+    let shared = null;
+    let me = null;
+
+    function loadShared() {
+        let state;
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const p = JSON.parse(raw);
+                state = fallbackState();
+                state.done = p.done || {};
+                state.edits = p.edits || {};
+                state.custom = p.custom || {};
+                state.removed = p.removed || {};
+                state.planStart = p.planStart || todayISO();
+                if (p.roster) {
+                    state.roster = {
+                        interns: p.roster.interns || [],
+                        staff: p.roster.staff || state.roster.staff,
+                        types: p.roster.types || state.roster.types
+                    };
+                }
+            } else {
+                state = fallbackState();
+            }
+        } catch (err) {
+            state = fallbackState();
+        }
+
+        // Ensure every intern has a batch — infer from name for demo/fallback,
+        // otherwise default based on index (1,2,3,4,1,2...)
+        state.roster.interns.forEach(function (intern, idx) {
+            if (!intern.batch) {
+                const known = DEFAULT_INTERNS.filter(function (d) {
+                    return d.name.toLowerCase() === intern.name.toLowerCase();
+                })[0];
+                intern.batch = known ? known.batch : String((idx % 4) + 1);
+            } else {
+                intern.batch = String(intern.batch);
+            }
+        });
+
+        return state;
+    }
+
+    function persist() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(shared)); }
+        catch (err) { /* ignore */ }
+    }
+
+    /* ================= HELPERS ================= */
+    function escapeHtml(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function initials(name) {
+        const parts = String(name).trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '?';
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    function internById(id) {
+        if (!shared || !id) return null;
+        return shared.roster.interns.filter(function (i) { return i.id === id; })[0] || null;
+    }
+    function staffById(id) {
+        if (!shared || !id) return null;
+        return shared.roster.staff.filter(function (s) { return s.id === id; })[0] || null;
+    }
+    function typeById(id) {
+        if (!shared || !id) return null;
+        return shared.roster.types.filter(function (t) { return t.id === id; })[0] || null;
+    }
+    function staffName(id) { const s = staffById(id); return s ? s.name : ''; }
+    function batchOf(intern) {
+        if (!intern) return '';
+        return intern.batch ? String(intern.batch) : '';
+    }
+
+    function isoDate(d) {
+        return d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+    }
+    function defaultDateForWeek(weekId) {
+        const idx = WEEK_INDEX[weekId];
+        if (idx === undefined || !shared) return '';
+        const base = new Date(shared.planStart + 'T00:00:00');
+        if (isNaN(base.getTime())) return '';
+        base.setDate(base.getDate() + idx * 7);
+        return isoDate(base);
+    }
+    function formatDate(iso) {
+        if (!iso) return '';
+        const d = new Date(iso + 'T00:00:00');
+        if (isNaN(d.getTime())) return iso;
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+    function formatDateLong(iso) {
+        if (!iso) return '';
+        const d = new Date(iso + 'T00:00:00');
+        if (isNaN(d.getTime())) return iso;
+        return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+    function addDays(iso, n) {
+        const d = new Date(iso + 'T00:00:00');
+        d.setDate(d.getDate() + n);
+        return isoDate(d);
+    }
+    function isOverdue(t) {
+        if (t.done) return false;
+        const d = t.scheduledDate || defaultDateForWeek(t.weekId);
+        if (!d) return false;
+        return d < todayISO();
+    }
+    function isToday(t) {
+        const d = t.scheduledDate || defaultDateForWeek(t.weekId);
+        return d === todayISO();
+    }
+    function isRescheduled(t) {
+        if (!t.scheduledDate) return false;
+        const def = defaultDateForWeek(t.weekId);
+        return !!def && t.scheduledDate !== def;
+    }
+    function effectiveDate(t) {
+        return t.scheduledDate || defaultDateForWeek(t.weekId) || '';
+    }
+
+    let toastTimer = null;
+    function toast(msg) {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2600);
+    }
+
+    /* ================= TASK DATA ================= */
+    function normalizeMarks(v) {
+        if (v === '' || v === null || v === undefined) return null;
+        const n = Number(v);
+        if (isNaN(n)) return null;
+        return Math.max(0, Math.min(10, n));
+    }
+
+    function tasksForWeek(week) {
+        const defaults = week.tasks.map(function (text, i) {
+            const id = week.id + '-d' + i;
+            if (shared.removed[id]) return null;
+            const e = shared.edits[id] || {};
+            return {
+                id: id,
+                weekId: week.id,
+                text: e.text !== undefined ? e.text : text,
+                typeId: typeById(e.typeId) ? e.typeId : '',
+                batchId: e.batchId ? String(e.batchId) : '',
+                scheduledDate: e.scheduledDate || '',
+                scheduledTime: e.scheduledTime || '',
+                marks: normalizeMarks(e.marks),
+                staffId: staffById(e.staffId) ? e.staffId : '',
+                internIds: Array.isArray(e.internIds) ? e.internIds : [],
+                done: !!shared.done[id],
+                custom: false
+            };
+        }).filter(Boolean);
+
+        const custom = (shared.custom[week.id] || []).map(function (c) {
+            return {
+                id: c.id,
+                weekId: week.id,
+                text: c.text,
+                typeId: typeById(c.typeId) ? c.typeId : '',
+                batchId: c.batchId ? String(c.batchId) : '',
+                scheduledDate: c.scheduledDate || '',
+                scheduledTime: c.scheduledTime || '',
+                marks: normalizeMarks(c.marks),
+                staffId: staffById(c.staffId) ? c.staffId : '',
+                internIds: Array.isArray(c.internIds) ? c.internIds : [],
+                done: !!shared.done[c.id],
+                custom: true
+            };
+        });
+
+        return defaults.concat(custom);
+    }
+
+    /* ---------- Batch / Individual classification ---------- */
+    // A task is treated as a "Batch task" if:
+    //   1. it has an explicit batchId, OR
+    //   2. all of its assigned interns share the same batch (2+ interns)
+    function classifyTask(t) {
+        if (t.batchId) return { kind: 'batch', batch: t.batchId };
+
+        const assignedInterns = t.internIds.map(internById).filter(Boolean);
+        if (assignedInterns.length >= 2) {
+            const batches = assignedInterns.map(batchOf);
+            const allHaveBatch = batches.every(function (b) { return !!b; });
+            if (allHaveBatch) {
+                const uniq = Array.from(new Set(batches));
+                if (uniq.length === 1) return { kind: 'batch', batch: uniq[0] };
+            }
+        }
+        return { kind: 'individual' };
+    }
+
+    function visibleToMe(t) {
+        const cls = classifyTask(t);
+        const myBatch = batchOf(me);
+        if (cls.kind === 'batch') return !!myBatch && cls.batch === myBatch;
+        return t.internIds.indexOf(me.id) > -1;
+    }
+
+    function myTasks() {
+        if (!me) return [];
+        const out = [];
+        PLAN.forEach(function (month) {
+            month.weeks.forEach(function (week) {
+                tasksForWeek(week).forEach(function (t) {
+                    if (visibleToMe(t)) {
+                        out.push({
+                            month: month,
+                            week: week,
+                            task: t,
+                            kind: classifyTask(t).kind
+                        });
+                    }
+                });
+            });
+        });
+        out.sort(function (a, b) {
+            const da = effectiveDate(a.task) || '9999-12-31';
+            const db = effectiveDate(b.task) || '9999-12-31';
+            if (da !== db) return da < db ? -1 : 1;
+            return a.task.id < b.task.id ? -1 : 1;
+        });
+        return out;
+    }
+
+    function computeStats() {
+        const list = myTasks();
+        let done = 0, pending = 0, overdue = 0, marks = 0, batchCount = 0, indivCount = 0;
+        list.forEach(function (x) {
+            if (x.kind === 'batch') batchCount++; else indivCount++;
+            if (x.task.done) {
+                done++;
+                if (typeof x.task.marks === 'number') marks += x.task.marks;
+            } else {
+                pending++;
+                if (isOverdue(x.task)) overdue++;
+            }
+        });
+        return {
+            list: list,
+            total: list.length,
+            batchCount: batchCount,
+            indivCount: indivCount,
+            done: done,
+            pending: pending,
+            overdue: overdue,
+            marks: marks,
+            maxMarks: list.length * 10
+        };
+    }
+
+    /* ================= RENDER: LOGIN ================= */
+    function renderLogin() {
+        const grid = document.getElementById('internPickGrid');
+        const interns = shared.roster.interns;
+
+        if (!interns.length) {
+            grid.innerHTML =
+                '<div class="login-empty">' +
+                    'No interns have been added yet.<br>' +
+                    'Please ask the school coordinator to set up the roster.' +
+                '</div>';
+            return;
+        }
+
+        grid.innerHTML = interns.map(function (i) {
+            let total = 0, done = 0;
+            PLAN.forEach(function (month) {
+                month.weeks.forEach(function (week) {
+                    tasksForWeek(week).forEach(function (t) {
+                        // Use a per-intern visibility check
+                        const cls = classifyTask(t);
+                        const b = batchOf(i);
+                        const visible = cls.kind === 'batch'
+                            ? (!!b && cls.batch === b)
+                            : t.internIds.indexOf(i.id) > -1;
+                        if (visible) {
+                            total++;
+                            if (t.done) done++;
+                        }
+                    });
+                });
+            });
+            const meta = total === 0
+                ? 'No tasks assigned yet'
+                : done + ' of ' + total + ' tasks completed';
+
+            return '' +
+                '<button type="button" class="pick-card" data-intern="' + i.id + '">' +
+                    '<div class="pick-avatar">' + escapeHtml(initials(i.name)) + '</div>' +
+                    '<div class="pick-info">' +
+                        '<div class="pick-name">' +
+                            escapeHtml(i.name) +
+                            '<span class="batch-tag">Batch ' + escapeHtml(batchOf(i)) + '</span>' +
+                        '</div>' +
+                        '<div class="pick-meta">' + escapeHtml(meta) + '</div>' +
+                    '</div>' +
+                    '<div class="pick-arrow">→</div>' +
+                '</button>';
+        }).join('');
+    }
+
+    /* ================= RENDER: DASHBOARD ================= */
+    let activeFilter = 'all';
+    let activeView = 'month';
+    let activeType = '';
+
+    function matchesFilter(x) {
+        const t = x.task;
+        if (activeFilter === 'batch' && x.kind !== 'batch') return false;
+        if (activeFilter === 'individual' && x.kind !== 'individual') return false;
+        if (activeFilter === 'done' && !t.done) return false;
+        if (activeFilter === 'pending' && t.done) return false;
+        if (activeFilter === 'overdue' && !isOverdue(t)) return false;
+        if (activeType && t.typeId !== activeType) return false;
+        return true;
+    }
+
+    function taskBadges(x) {
+        const t = x.task;
+        let html = '';
+
+        const type = typeById(t.typeId);
+        if (type) {
+            html += '<span class="badge badge-type" style="background:' + type.color + '">' +
+                    escapeHtml(type.name) + '</span>';
+        }
+
+        // Batch / Individual badge
+        if (x.kind === 'batch') {
+            html += '<span class="badge badge-shared">🏫 Batch ' + escapeHtml(t.batchId || batchOf(me)) + '</span>';
+        } else {
+            html += '<span class="badge" style="background:var(--indiv-soft);color:var(--indiv);border:1px solid var(--indiv-border)">👤 Individual</span>';
+        }
+
+        const d = effectiveDate(t);
+        if (d) {
+            const od = isOverdue(t);
+            const td = isToday(t);
+            const rs = isRescheduled(t);
+            const cls = od ? ' overdue' : (td ? ' today' : (rs ? ' rescheduled' : ''));
+            const icon = od ? '⚠ ' : (td ? '⏰ ' : (rs ? '↻ ' : '📅 '));
+            const label = td ? 'Today' : formatDate(d);
+            html += '<span class="badge badge-date' + cls + '">' +
+                    icon + label + (t.scheduledTime ? ' · ' + t.scheduledTime : '') + '</span>';
+        }
+
+        const sName = staffName(t.staffId);
+        if (sName) {
+            html += '<span class="badge badge-staff">✓ Checked by ' + escapeHtml(sName) + '</span>';
+        } else {
+            html += '<span class="badge badge-await">⏳ Checker not assigned</span>';
+        }
+
+        if (t.done && typeof t.marks === 'number') {
+            const perfect = t.marks === 10 ? ' perfect' : '';
+            html += '<span class="badge badge-marks' + perfect + '">⭐ ' + t.marks + '/10 marks</span>';
+        } else if (t.done) {
+            html += '<span class="badge badge-await">⭐ Marks pending</span>';
+        }
+
+        return html;
+    }
+
+    function taskCardHtml(x) {
+        const t = x.task;
+        return '' +
+            '<div class="itask' +
+                (t.done ? ' done' : '') +
+                (isOverdue(t) ? ' overdue' : '') +
+                (x.kind === 'batch' ? ' batch-task' : ' individual-task') +
+                '" data-id="' + t.id + '">' +
+                '<input type="checkbox" class="itask-check" id="it-' + t.id + '"' +
+                    (t.done ? ' checked' : '') + '>' +
+                '<div class="itask-body">' +
+                    '<label class="itask-text" for="it-' + t.id + '">' + escapeHtml(t.text) + '</label>' +
+                    '<div class="itask-meta">' + taskBadges(x) + '</div>' +
+                    (t.done && typeof t.marks !== 'number'
+                        ? '<div class="itask-note">Awaiting review by your staff checker.</div>'
+                        : '') +
+                '</div>' +
+            '</div>';
+    }
+
+    /* ---------- Grouping strategies ---------- */
+    function renderGrouped(visible) {
+        if (activeView === 'flat') {
+            return visible.map(taskCardHtml).join('');
+        }
+
+        if (activeView === 'day') {
+            // group by effective date
+            const buckets = {};
+            visible.forEach(function (x) {
+                const d = effectiveDate(x.task) || 'unscheduled';
+                if (!buckets[d]) buckets[d] = [];
+                buckets[d].push(x);
+            });
+            const keys = Object.keys(buckets).sort(function (a, b) {
+                if (a === 'unscheduled') return 1;
+                if (b === 'unscheduled') return -1;
+                return a < b ? -1 : 1;
+            });
+            const today = todayISO();
+            const tomorrow = addDays(today, 1);
+            return keys.map(function (k) {
+                let title, dotCls = '';
+                if (k === 'unscheduled') { title = 'Unscheduled'; }
+                else if (k === today) { title = 'Today · ' + formatDateLong(k); dotCls = ' today'; }
+                else if (k === tomorrow) { title = 'Tomorrow · ' + formatDateLong(k); }
+                else if (k < today) { title = 'Overdue · ' + formatDateLong(k); dotCls = ' overdue'; }
+                else { title = formatDateLong(k); }
+
+                const items = buckets[k];
+                const doneCount = items.filter(function (y) { return y.task.done; }).length;
+                return '' +
+                    '<div class="group">' +
+                        '<div class="group-head">' +
+                            '<span class="group-dot' + dotCls + '"></span>' +
+                            '<span class="group-title">' + escapeHtml(title) + '</span>' +
+                            '<span class="group-count">' + doneCount + '/' + items.length + '</span>' +
+                        '</div>' +
+                        items.map(taskCardHtml).join('') +
+                    '</div>';
+            }).join('');
+        }
+
+        // month or week
+        let html = '';
+        let currentMonthId = null;
+        let currentWeekId = null;
+        let monthItems = [];
+        let weekOpen = false;
+
+        function closeWeek() {
+            if (weekOpen) { html += '</div>'; weekOpen = false; }
+        }
+        function closeMonth() {
+            if (currentMonthId !== null) {
+                closeWeek();
+                html += '</div>'; // close group
+            }
+        }
+
+        visible.forEach(function (x) {
+            const monthId = x.month.id;
+            if (monthId !== currentMonthId) {
+                closeMonth();
+                monthItems = visible.filter(function (y) { return y.month.id === monthId; });
+                const doneCount = monthItems.filter(function (y) { return y.task.done; }).length;
+                html += '<div class="group">' +
+                            '<div class="group-head">' +
+                                '<span class="group-dot"></span>' +
+                                '<span class="group-title">' + escapeHtml(x.month.title) + '</span>' +
+                                '<span class="group-count">' + doneCount + '/' + monthItems.length + '</span>' +
+                            '</div>';
+                currentMonthId = monthId;
+                currentWeekId = null;
+            }
+
+            if (activeView === 'week') {
+                if (x.week.id !== currentWeekId) {
+                    closeWeek();
+                    const weekItems = visible.filter(function (y) {
+                        return y.month.id === monthId && y.week.id === x.week.id;
+                    });
+                    const wd = weekItems.filter(function (y) { return y.task.done; }).length;
+                    html += '<div class="week-block">' +
+                                '<div class="week-label">' +
+                                    escapeHtml(x.week.title) + ' · ' + escapeHtml(x.week.focus) +
+                                    ' <span style="margin-left:auto;color:#94a3b8">' + wd + '/' + weekItems.length + '</span>' +
+                                '</div>';
+                    weekOpen = true;
+                    currentWeekId = x.week.id;
+                }
+            }
+
+            html += taskCardHtml(x);
+        });
+
+        closeMonth();
+        return html;
+    }
+
+    function renderTaskList(stats) {
+        const listEl = document.getElementById('taskList');
+        const visible = stats.list.filter(matchesFilter);
+
+        if (!stats.total) {
+            listEl.innerHTML =
+                '<div class="empty">' +
+                    '<div class="empty-emoji">🧘</div>' +
+                    '<h3>No tasks assigned yet</h3>' +
+                    '<p>Your coordinator hasn’t assigned any tasks to you or your batch.<br>' +
+                    'Check back later or ask the school office.</p>' +
+                '</div>';
+            return;
+        }
+
+        if (!visible.length) {
+            listEl.innerHTML =
+                '<div class="empty">' +
+                    '<div class="empty-emoji">🔍</div>' +
+                    '<h3>Nothing matches this filter</h3>' +
+                    '<p>Try switching to “All” to see your complete task list.</p>' +
+                '</div>';
+            return;
+        }
+
+        listEl.innerHTML = renderGrouped(visible);
+    }
+
+    function renderNextUp(stats) {
+        const box = document.getElementById('nextUp');
+        const pending = stats.list.filter(function (x) { return !x.task.done; });
+        if (!pending.length) { box.style.display = 'none'; return; }
+
+        const next = pending[0];
+        document.getElementById('nextUpText').textContent = next.task.text;
+
+        let meta = '';
+        if (next.kind === 'batch') {
+            meta += '<span class="badge badge-shared">🏫 Batch ' + escapeHtml(batchOf(me)) + '</span>';
+        } else {
+            meta += '<span class="badge" style="background:var(--indiv-soft);color:var(--indiv);border:1px solid var(--indiv-border)">👤 Individual</span>';
+        }
+        const type = typeById(next.task.typeId);
+        if (type) meta += '<span class="badge badge-type" style="background:' + type.color + '">' + escapeHtml(type.name) + '</span>';
+        const d = effectiveDate(next.task);
+        if (d) {
+            const od = isOverdue(next.task);
+            const td = isToday(next.task);
+            const cls = od ? ' overdue' : (td ? ' today' : '');
+            meta += '<span class="badge badge-date' + cls + '">' +
+                    (od ? '⚠ ' : td ? '⏰ ' : '📅 ') +
+                    (td ? 'Today' : formatDate(d)) +
+                    (next.task.scheduledTime ? ' · ' + next.task.scheduledTime : '') + '</span>';
+        }
+        const sName = staffName(next.task.staffId);
+        if (sName) meta += '<span class="badge badge-staff">✓ ' + escapeHtml(sName) + '</span>';
+
+        document.getElementById('nextUpMeta').innerHTML = meta;
+        box.style.display = '';
+    }
+
+    function renderTypeFilter() {
+        const sel = document.getElementById('typeFilter');
+        const types = shared.roster.types;
+        if (!typeById(activeType)) activeType = '';
+        sel.innerHTML = ['<option value="">All types</option>'].concat(
+            types.map(function (t) {
+                return '<option value="' + t.id + '"' + (t.id === activeType ? ' selected' : '') + '>' +
+                       escapeHtml(t.name) + '</option>';
+            })
+        ).join('');
+        sel.value = activeType;
+    }
+
+    function renderDashboard() {
+        if (!me) return;
+
+        document.getElementById('barAvatar').textContent = initials(me.name);
+        document.getElementById('barName').textContent = me.name;
+        document.getElementById('barBatch').textContent = 'Batch ' + batchOf(me);
+        document.getElementById('batchSelect').value = batchOf(me) || '4';
+
+        const stats = computeStats();
+
+        document.getElementById('heroMarks').textContent = stats.marks;
+        document.getElementById('heroMarksDenom').textContent = '/' + stats.maxMarks;
+
+        const pct = stats.total ? Math.round((stats.done / stats.total) * 100) : 0;
+        document.getElementById('heroPct').textContent = pct + '%';
+        document.getElementById('heroFill').style.width = pct + '%';
+
+        document.getElementById('tileTotal').textContent = stats.total;
+        document.getElementById('tileBatch').textContent = stats.batchCount;
+        document.getElementById('tileDone').textContent = stats.done;
+        document.getElementById('tileOverdue').textContent = stats.overdue;
+
+        const msgEl = document.getElementById('heroMsg');
+        if (!stats.total) {
+            msgEl.innerHTML = 'No tasks have been assigned to you or your batch yet.';
+        } else if (stats.done === stats.total) {
+            msgEl.innerHTML = '<b>All done — congratulations!</b> Every assigned task is complete. 🎉';
+        } else if (stats.overdue > 0) {
+            msgEl.innerHTML = 'You have <b>' + stats.overdue + ' overdue task' +
+                (stats.overdue === 1 ? '' : 's') + '</b>. Please check with your coordinator about rescheduling.';
+        } else if (stats.done === 0) {
+            msgEl.innerHTML = 'Your internship starts here — tick tasks off as you complete them.';
+        } else {
+            msgEl.innerHTML = '<b>' + stats.pending + ' task' + (stats.pending === 1 ? '' : 's') +
+                ' left</b> to complete. Keep going!';
+        }
+
+        document.getElementById('cAll').textContent = stats.total;
+        document.getElementById('cBatch').textContent = stats.batchCount;
+        document.getElementById('cIndiv').textContent = stats.indivCount;
+        document.getElementById('cPending').textContent = stats.pending;
+        document.getElementById('cDone').textContent = stats.done;
+        document.getElementById('cOverdue').textContent = stats.overdue;
+
+        renderNextUp(stats);
+        renderTypeFilter();
+        renderTaskList(stats);
+    }
+
+    /* ================= ACTIONS ================= */
+    function login(internId) {
+        const intern = internById(internId);
+        if (!intern) { toast('Intern not found.'); return; }
+        me = { id: intern.id, name: intern.name, batch: batchOf(intern) };
+        try { sessionStorage.setItem(SESSION_KEY, intern.id); } catch (e) {}
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appScreen').classList.add('on');
+        renderDashboard();
+    }
+
+    function logout() {
+        me = null;
+        try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
+        document.getElementById('appScreen').classList.remove('on');
+        document.getElementById('loginScreen').style.display = '';
+        renderLogin();
+    }
+
+    function setDone(id, val) {
+        if (val) shared.done[id] = true;
+        else delete shared.done[id];
+        persist();
+    }
+
+    function setMyBatch(newBatch) {
+        if (!me) return;
+        const intern = internById(me.id);
+        if (!intern) return;
+        intern.batch = String(newBatch);
+        me.batch = String(newBatch);
+        persist();
+    }
+
+    /* ================= EVENTS ================= */
+
+    document.getElementById('internPickGrid').addEventListener('click', function (e) {
+        const card = e.target.closest('.pick-card');
+        if (!card) return;
+        login(card.dataset.intern);
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    document.getElementById('refreshBtn').addEventListener('click', function () {
+        const btn = this;
+        btn.classList.add('spin');
+        shared = loadShared();
+
+        if (me && !internById(me.id)) {
+            setTimeout(function () {
+                btn.classList.remove('spin');
+                toast('Your profile was removed from the roster.');
+                logout();
+            }, 400);
+            return;
+        }
+        if (me) {
+            const fresh = internById(me.id);
+            if (fresh) { me.name = fresh.name; me.batch = batchOf(fresh); }
+        }
+
+        setTimeout(function () {
+            btn.classList.remove('spin');
+            if (me) renderDashboard(); else renderLogin();
+            toast('Tasks refreshed ✓');
+        }, 450);
+    });
+
+    // Batch change
+    document.getElementById('batchSelect').addEventListener('change', function () {
+        const val = this.value;
+        setMyBatch(val);
+        renderDashboard();
+        toast('Switched to Batch ' + val);
+    });
+
+    // Filter chips
+    document.querySelectorAll('.chip[data-filter]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            activeFilter = btn.dataset.filter;
+            document.querySelectorAll('.chip[data-filter]').forEach(function (b) {
+                b.classList.toggle('active', b === btn);
+            });
+            if (me) renderDashboard();
+        });
+    });
+
+    // View segment
+    document.getElementById('viewSeg').addEventListener('click', function (e) {
+        const btn = e.target.closest('button[data-view]');
+        if (!btn) return;
+        activeView = btn.dataset.view;
+        Array.prototype.forEach.call(this.children, function (b) {
+            b.classList.toggle('active', b === btn);
+        });
+        if (me) renderDashboard();
+    });
+
+    // Type filter
+    document.getElementById('typeFilter').addEventListener('change', function () {
+        activeType = this.value;
+        if (me) renderDashboard();
+    });
+
+    // Task checkbox
+    document.getElementById('taskList').addEventListener('change', function (e) {
+        const cb = e.target.closest('.itask-check');
+        if (!cb) return;
+        const row = cb.closest('.itask');
+        setDone(row.dataset.id, cb.checked);
+        toast(cb.checked ? 'Marked complete — your checker will review it ✓' : 'Marked as not complete');
+        renderDashboard();
+    });
+
+    // Cross-tab sync
+    window.addEventListener('storage', function (e) {
+        if (e.key !== STORAGE_KEY) return;
+        shared = loadShared();
+        if (me) {
+            if (!internById(me.id)) { logout(); return; }
+            const fresh = internById(me.id);
+            if (fresh) { me.name = fresh.name; me.batch = batchOf(fresh); }
+            renderDashboard();
+        } else {
+            renderLogin();
+        }
+    });
+
+    /* ================= INIT ================= */
+    shared = loadShared();
+
+    let savedId = null;
+    try { savedId = sessionStorage.getItem(SESSION_KEY); } catch (e) {}
+
+    if (savedId && internById(savedId)) login(savedId);
+    else renderLogin();
+})();
+</script>
+</body>
+</html>
