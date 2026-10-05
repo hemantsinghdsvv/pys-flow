@@ -474,6 +474,76 @@ export async function reviewProposal(id: string, values: ProposalReviewValues) {
   revalidatePath("/reviews");
 }
 
+// resolveRoleAssignees removed — task assignment is now manual (admin assigns via UI)
+
+function buildEventTasks(
+  proposal: {
+    title: string;
+    type: string;
+    capacity?: number | null;
+    budget?: number | null;
+  },
+  assignees: {
+    teacherId: string | null;
+    schedulerId: string | null;
+    frontDeskId: string | null;
+    financeId: string | null;
+    opsId: string | null;
+    internId: string | null;
+  }
+) {
+  return [
+    {
+      title: `[Curriculum & Teaching] Syllabus, Asana Sequences & Handouts for ${proposal.title}`,
+      description: `Prepare structured curriculum, pranayama & asana sequences, teaching objectives, and workshop participant manuals for ${proposal.type.toLowerCase()}.`,
+      priority: "HIGH" as const,
+      order: 1,
+      assigneeId: assignees.teacherId,
+      roleName: "Teacher / Faculty Lead",
+    },
+    {
+      title: `[Scheduling & Space] Timetable Allocation, Studio Booking & Prop Setup for ${proposal.title}`,
+      description: `Book studio room, verify timing slots, ensure mat and prop availability (bolsters, straps, blocks), and coordinate timetable.`,
+      priority: "HIGH" as const,
+      order: 2,
+      assigneeId: assignees.schedulerId,
+      roleName: "Schedule Manager",
+    },
+    {
+      title: `[Front Desk & Welcome] Attendee Check-In Desk, Roster & Welcome Protocol for ${proposal.title}`,
+      description: `Manage student arrivals, attendance roll call, welcome refreshments, and waiver forms (capacity: ${proposal.capacity ?? "unlimited"} students).`,
+      priority: "MEDIUM" as const,
+      order: 3,
+      assigneeId: assignees.frontDeskId,
+      roleName: "Front Desk Coordinator",
+    },
+    {
+      title: `[Finance & Accounts] Fee Collection, Ledger Accounting & Expense Tracking for ${proposal.title}`,
+      description: `Track workshop participant fees, manage budget expenditures ($${proposal.budget ?? 0}), and calculate faculty honorarium.`,
+      priority: "MEDIUM" as const,
+      order: 4,
+      assigneeId: assignees.financeId,
+      roleName: "Finance Manager",
+    },
+    {
+      title: `[Studio Marketing] Announcement Posters, WhatsApp Broadcast & Social Media Blast for ${proposal.title}`,
+      description: `Publish workshop schedule to student community, studio notice boards, and send WhatsApp/Email invitations.`,
+      priority: "HIGH" as const,
+      order: 5,
+      assigneeId: assignees.opsId,
+      roleName: "Studio Operations Lead",
+    },
+    {
+      title: `[Assistant Instruction] Workshop Demonstration & Hands-On Posture Adjustments for ${proposal.title}`,
+      description: `Support lead teacher with live asana demonstrations, student alignment corrections, and hands-on assists during practice.`,
+      priority: "MEDIUM" as const,
+      order: 6,
+      assigneeId: assignees.internId,
+      roleName: "Yoga Instructor Intern",
+    },
+  ];
+}
+
 export async function convertProposalToProject(id: string, options: ProposalConvertValues) {
   const user = await requirePermission("project:create");
   const current = await getProposalOrThrow(id);
@@ -511,7 +581,7 @@ export async function convertProposalToProject(id: string, options: ProposalConv
         projectId: project.id,
         userId: current.teacherId,
       },
-    });
+    }).catch(() => {});
   }
 
   // 3. Link proposal to project
@@ -523,63 +593,8 @@ export async function convertProposalToProject(id: string, options: ProposalConv
     },
   });
 
-  // 4. Auto-provision Kanban Tasks across the 5 Production Tracks
-  if (parsed.autoCreateKanbanTasks) {
-    const tasksData = [
-      {
-        title: `[Design] Creative assets & promotional banners for ${current.title}`,
-        description: `Create high-resolution visual collateral, posters, social media banners (all aspect ratios), and web assets for ${current.type.toLowerCase()}.`,
-        priority: "HIGH" as const,
-        order: 1,
-      },
-      {
-        title: `[Webpage] Landing page & event calendar integration for ${current.title}`,
-        description: `Develop responsive HTML landing page, slider banners, syllabus presentation, and ensure full stability.`,
-        priority: "HIGH" as const,
-        order: 2,
-      },
-      {
-        title: `[Backend] Package schedule and ticketing/pricing API for ${current.title}`,
-        description: `Implement schedule configuration, participant registration capacity (${current.capacity ?? "unlimited"}), and pricing engine.`,
-        priority: "MEDIUM" as const,
-        order: 3,
-      },
-      {
-        title: `[App] In-App ordering, promo discount codes & share flow for ${current.title}`,
-        description: `Configure mobile application upcoming event cards, discount promo engine, and social sharing links.`,
-        priority: "MEDIUM" as const,
-        order: 4,
-      },
-      {
-        title: `[Marketing] Multichannel campaign (Email, WhatsApp, Social Media) for ${current.title}`,
-        description: `Deploy marketing blasts across Email, WhatsApp broadcast, Instagram, Facebook, LinkedIn, and Eventbrite.`,
-        priority: "HIGH" as const,
-        order: 5,
-      },
-      {
-        title: `[Accounts] Expense ledger & sales revenue tracking for ${current.title}`,
-        description: `Track participant fees, manage budget expenditures ($${current.budget ?? 0}), and calculate instructor commission.`,
-        priority: "MEDIUM" as const,
-        order: 6,
-      },
-    ];
-
-    for (const t of tasksData) {
-      await prisma.task.create({
-        data: {
-          companyId: current.companyId,
-          projectId: project.id,
-          title: t.title,
-          description: t.description,
-          status: "PENDING",
-          priority: t.priority,
-          order: t.order,
-          createdById: user.id,
-          deadline: current.startDate,
-        },
-      });
-    }
-  }
+  // Tasks are NOT auto-created here.
+  // Admin will manually assign tasks via the "Assign Tasks" modal on the Events page after approval.
 
   await logActivity({
     userId: user.id,
@@ -588,7 +603,7 @@ export async function convertProposalToProject(id: string, options: ProposalConv
     entityType: "Proposal",
     entityId: id,
     entityName: current.title,
-    details: { convertedToProjectId: project.id },
+    details: { convertedToProjectId: project.id, tasksAutoAssigned: false, note: "Pending manual task assignment by admin" },
   });
 
   revalidatePath("/propose");
@@ -597,11 +612,14 @@ export async function convertProposalToProject(id: string, options: ProposalConv
   revalidatePath("/projects");
   revalidatePath("/kanban");
   revalidatePath("/tasks");
+  revalidatePath("/activity-log");
 
   revalidatePath(`/kanban?project=${project.id}`);
   redirect(`/kanban?project=${project.id}`);
 }
 
+// ─── Quick Approve: Only approves the proposal + provisions the project shell ───
+// Tasks are NOT created here. Admin assigns tasks manually via the UI after approval.
 export async function quickApproveEvent(id: string) {
   const user = await requireUser();
   const isAdmin = user.hierarchyLevel === 1 || user.isSystemAdmin === true;
@@ -609,18 +627,169 @@ export async function quickApproveEvent(id: string) {
     throw new Error("Only the School Director / Admin can approve events.");
   }
   const current = await getProposalOrThrow(id);
+
+  if (current.status === "CONVERTED") {
+    throw new Error("Event is already approved and tasks have been assigned.");
+  }
+
+  let projectId = current.projectId;
+
+  if (!projectId) {
+    const project = await prisma.project.create({
+      data: {
+        companyId: current.companyId,
+        name: current.title,
+        description: current.description,
+        objective: current.objectives,
+        deliverables: `Operational deliverables for ${current.type.toLowerCase()}: ${current.title}`,
+        difficulty: "INTERMEDIATE",
+        priority: "HIGH",
+        status: "ACTIVE",
+        startDate: current.startDate,
+        endDate: current.endDate,
+        imageUrl: current.mediaUrl,
+        createdById: user.id,
+      },
+    });
+    projectId = project.id;
+
+    if (current.teacherId) {
+      await prisma.projectMentor.create({
+        data: { projectId: project.id, userId: current.teacherId },
+      }).catch(() => {});
+    }
+  }
+
+  // Mark as APPROVED — admin still needs to assign tasks via the "Assign Tasks" modal
   await prisma.proposal.update({
     where: { id },
     data: {
       status: "APPROVED",
+      projectId,
       reviewerId: user.id,
       reviewedAt: new Date(),
-      reviewFeedback: "Approved by Admin for Pre-Planning & Execution",
+      reviewFeedback: "Approved by Admin — please assign tasks to staff members.",
     },
+  });
+
+  // Notify the proposal creator
+  await prisma.notification.create({
+    data: {
+      userId: current.createdById,
+      type: "REVIEW_COMPLETED",
+      title: `Event "${current.title}" has been Approved!`,
+      message: `Your event proposal has been approved by the admin. Tasks will be assigned to the team shortly.`,
+      link: `/propose/${id}`,
+    },
+  }).catch(() => {});
+
+  await logActivity({
+    userId: user.id,
+    companyId: current.companyId,
+    action: "APPROVE",
+    entityType: "Proposal",
+    entityId: id,
+    entityName: current.title,
+    details: { projectId, tasksAssigned: false, note: "Awaiting manual task assignment by admin" },
   });
 
   revalidatePath("/events");
   revalidatePath("/propose");
   revalidatePath(`/propose/${id}`);
+  revalidatePath("/projects");
+  revalidatePath("/activity-log");
+
+  return { success: true, projectId };
+}
+
+// ─── Task Assignment Payload ───
+export type EventTaskAssignments = {
+  proposalId: string;
+  projectId: string;
+  teacherUserId: string | null;
+  schedulerUserId: string | null;
+  frontDeskUserId: string | null;
+  financeUserId: string | null;
+  opsUserId: string | null;
+  internUserId: string | null;
+};
+
+// ─── Manual Task Assignment: Admin picks who does what ───
+export async function assignEventTasks(payload: EventTaskAssignments) {
+  const user = await requireUser();
+  const isAdmin = user.hierarchyLevel === 1 || user.isSystemAdmin === true;
+  if (!isAdmin) {
+    throw new Error("Only the Admin can assign event tasks.");
+  }
+
+  const current = await getProposalOrThrow(payload.proposalId);
+
+  const assignees = {
+    teacherId: payload.teacherUserId,
+    schedulerId: payload.schedulerUserId,
+    frontDeskId: payload.frontDeskUserId,
+    financeId: payload.financeUserId,
+    opsId: payload.opsUserId,
+    internId: payload.internUserId,
+  };
+
+  const tasksData = buildEventTasks(current, assignees);
+
+  for (const t of tasksData) {
+    const task = await prisma.task.create({
+      data: {
+        companyId: current.companyId,
+        projectId: payload.projectId,
+        title: t.title,
+        description: t.description,
+        status: "PENDING",
+        priority: t.priority,
+        order: t.order,
+        assigneeId: t.assigneeId || null,
+        createdById: user.id,
+        deadline: current.startDate,
+      },
+    });
+
+    if (t.assigneeId) {
+      await prisma.notification.create({
+        data: {
+          userId: t.assigneeId,
+          type: "TASK_ASSIGNED",
+          title: `Task Assigned: ${t.roleName}`,
+          message: `You have been assigned to "${t.title}" for the event "${current.title}". Please check your Kanban board.`,
+          link: `/kanban?project=${payload.projectId}`,
+        },
+      }).catch(() => {});
+    }
+  }
+
+  // Mark proposal as CONVERTED now that tasks are assigned
+  await prisma.proposal.update({
+    where: { id: payload.proposalId },
+    data: {
+      status: "CONVERTED",
+    },
+  });
+
+  await logActivity({
+    userId: user.id,
+    companyId: current.companyId,
+    action: "STATUS_CHANGE",
+    entityType: "Proposal",
+    entityId: payload.proposalId,
+    entityName: current.title,
+    details: { projectId: payload.projectId, tasksAssigned: true, assignedBy: user.name },
+  });
+
+  revalidatePath("/events");
+  revalidatePath("/propose");
+  revalidatePath(`/propose/${payload.proposalId}`);
+  revalidatePath("/kanban");
+  revalidatePath("/tasks");
+  revalidatePath("/projects");
+  revalidatePath("/activity-log");
+
   return { success: true };
 }
+

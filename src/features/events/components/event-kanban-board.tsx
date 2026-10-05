@@ -7,15 +7,14 @@ import {
   Calendar, 
   MapPin, 
   Users, 
-  DollarSign, 
   CheckCircle, 
   Clock, 
   Sparkles, 
   ArrowRight,
-  ShieldCheck,
   Loader2,
-  Eye,
-  FileText
+  FileText,
+  ClipboardList,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { quickApproveEvent } from "@/features/propose/actions";
+import { AssignTasksDialog, type StaffUser } from "@/features/events/components/assign-tasks-dialog";
 import { cn } from "@/lib/utils";
 
 export type SerializedEvent = {
@@ -44,6 +44,7 @@ export type SerializedEvent = {
   objectives: string | null;
   targetAudience: string | null;
   reviewedAt: string | null;
+  projectId: string | null;
 };
 
 const KANBAN_STAGES = [
@@ -56,10 +57,10 @@ const KANBAN_STAGES = [
   },
   {
     id: "APPROVED",
-    title: "2. Approved",
+    title: "2. Approved — Assign Tasks",
     badgeBg: "bg-blue-100 text-blue-800 border-blue-300",
     headerBg: "bg-blue-500/10 border-blue-400/30 text-blue-900 dark:text-blue-200",
-    description: "Sanctioned by School Director",
+    description: "Sanctioned by School Director — assign staff tasks",
   },
   {
     id: "PRE_PLANNING",
@@ -81,14 +82,17 @@ export function EventKanbanBoard({
   events: initialEvents,
   isAdmin,
   currentUserId,
+  staffUsers,
 }: {
   events: SerializedEvent[];
   isAdmin: boolean;
   currentUserId: string;
+  staffUsers: StaffUser[];
 }) {
   const [events, setEvents] = useState<SerializedEvent[]>(initialEvents);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<SerializedEvent | null>(null);
+  const [assignTarget, setAssignTarget] = useState<SerializedEvent | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleQuickApprove = (e: React.MouseEvent, eventId: string) => {
@@ -96,17 +100,35 @@ export function EventKanbanBoard({
     setPendingId(eventId);
     startTransition(async () => {
       try {
-        await quickApproveEvent(eventId);
+        const result = await quickApproveEvent(eventId);
         setEvents((prev) =>
-          prev.map((ev) => (ev.id === eventId ? { ...ev, status: "APPROVED" } : ev))
+          prev.map((ev) =>
+            ev.id === eventId
+              ? { ...ev, status: "APPROVED", projectId: result.projectId ?? ev.projectId }
+              : ev
+          )
         );
-        toast.success("Event approved by Admin!");
-      } catch (err: any) {
-        toast.error(err.message || "Failed to approve event");
+        toast.success("Event approved! Now assign tasks to the team →", {
+          duration: 5000,
+          action: {
+            label: "Assign Tasks",
+            onClick: () => {
+              const ev = events.find((e) => e.id === eventId);
+              if (ev) setAssignTarget({ ...ev, status: "APPROVED", projectId: result.projectId ?? ev.projectId });
+            },
+          },
+        });
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Failed to approve event");
       } finally {
         setPendingId(null);
       }
     });
+  };
+
+  const handleOpenAssign = (e: React.MouseEvent, ev: SerializedEvent) => {
+    e.stopPropagation();
+    setAssignTarget(ev);
   };
 
   // Group events into stages
@@ -119,7 +141,7 @@ export function EventKanbanBoard({
         return ev.status === "APPROVED";
       }
       if (stageId === "PRE_PLANNING") {
-        return ev.status === "REWORK"; // or custom pre-planning stage
+        return ev.status === "REWORK";
       }
       if (stageId === "CONFIRMED") {
         return ev.status === "CONVERTED";
@@ -130,17 +152,17 @@ export function EventKanbanBoard({
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto pb-4">
+      <div className="flex h-[calc(100vh-14rem)] w-full gap-4 overflow-x-auto overflow-y-hidden pb-4">
         {KANBAN_STAGES.map((stage) => {
           const stageEvents = getStageEvents(stage.id);
 
           return (
             <div
               key={stage.id}
-              className="flex flex-col rounded-xl border border-border bg-slate-50/60 dark:bg-slate-900/40 min-h-[500px]"
+              className="flex min-w-[280px] max-w-[340px] flex-1 flex-col rounded-xl border border-border bg-slate-50/60 dark:bg-slate-900/40 h-full max-h-full"
             >
               {/* Stage Header */}
-              <div className={cn("p-3.5 border-b rounded-t-xl", stage.headerBg)}>
+              <div className={cn("p-3.5 border-b rounded-t-xl shrink-0", stage.headerBg)}>
                 <div className="flex items-center justify-between">
                   <h3 className="font-bold text-sm leading-tight">{stage.title}</h3>
                   <Badge variant="secondary" className="font-mono text-xs">
@@ -161,6 +183,7 @@ export function EventKanbanBoard({
                     const isApproving = pendingId === ev.id;
                     const isPendingApproval =
                       ev.status === "DRAFT" || ev.status === "SUBMITTED" || ev.status === "UNDER_REVIEW";
+                    const isApproved = ev.status === "APPROVED";
 
                     return (
                       <Card
@@ -182,7 +205,7 @@ export function EventKanbanBoard({
 
                             {ev.pricing != null && (
                               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                {ev.pricing === 0 ? "Free" : `$${ev.pricing}`}
+                                {ev.pricing === 0 ? "Free" : `₹${ev.pricing}`}
                               </span>
                             )}
                           </div>
@@ -227,7 +250,7 @@ export function EventKanbanBoard({
 
                           {/* Quick Admin Approval Button */}
                           {isAdmin && isPendingApproval && (
-                            <div className="pt-2">
+                            <div className="pt-2 space-y-1.5">
                               <Button
                                 size="sm"
                                 onClick={(e) => handleQuickApprove(e, ev.id)}
@@ -240,6 +263,20 @@ export function EventKanbanBoard({
                                   <CheckCircle className="size-3.5 mr-1.5" />
                                 )}
                                 Approve Event (Admin)
+                              </Button>
+                            </div>
+                          )}
+
+                          {/* Assign Tasks Button — shown for APPROVED events */}
+                          {isAdmin && isApproved && ev.projectId && (
+                            <div className="pt-2">
+                              <Button
+                                size="sm"
+                                onClick={(e) => handleOpenAssign(e, ev)}
+                                className="w-full h-8 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs gap-1.5"
+                              >
+                                <ClipboardList className="size-3.5" />
+                                Assign Tasks to Team →
                               </Button>
                             </div>
                           )}
@@ -261,7 +298,7 @@ export function EventKanbanBoard({
         })}
       </div>
 
-      {/* ── Event Details & Registration Fields Modal ── */}
+      {/* ── Event Details Modal ── */}
       {selectedEvent && (
         <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
@@ -310,7 +347,7 @@ export function EventKanbanBoard({
                 <div>
                   <span className="text-muted-foreground block font-medium">Fee / Pricing</span>
                   <span className="font-semibold text-emerald-600 text-sm">
-                    {selectedEvent.pricing ? `$${selectedEvent.pricing} HKD` : "Complimentary"}
+                    {selectedEvent.pricing ? `₹${selectedEvent.pricing}` : "Complimentary"}
                   </span>
                 </div>
                 <div>
@@ -338,7 +375,33 @@ export function EventKanbanBoard({
                 )}
               </div>
 
-              {/* Event Registration Fields Section (As requested by Client) */}
+              {/* Approved — Task Assignment Prompt */}
+              {isAdmin && selectedEvent.status === "APPROVED" && selectedEvent.projectId && (
+                <div className="rounded-xl border border-blue-200 bg-blue-50/70 dark:border-blue-900/30 dark:bg-blue-950/20 p-4 flex items-start gap-3">
+                  <ClipboardList className="size-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 space-y-2">
+                    <p className="font-semibold text-blue-900 dark:text-blue-200 text-sm">
+                      Ready to Assign Tasks
+                    </p>
+                    <p className="text-xs text-blue-800/80 dark:text-blue-300/80">
+                      This event is approved. Assign each task to the right staff member — they'll be notified immediately.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setSelectedEvent(null);
+                        setAssignTarget(selectedEvent);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-semibold gap-2"
+                    >
+                      <ClipboardList className="size-4" />
+                      Assign Tasks to Team
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Event Registration Fields Section */}
               <div className="border border-border rounded-xl p-4 bg-card space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-bold text-sm font-serif text-foreground flex items-center gap-2">
@@ -354,30 +417,19 @@ export function EventKanbanBoard({
                 </p>
 
                 <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2 rounded bg-muted/60 flex items-center justify-between">
-                    <span className="font-medium">Student Full Name</span>
-                    <span className="text-[10px] text-emerald-600 font-semibold">Required</span>
-                  </div>
-                  <div className="p-2 rounded bg-muted/60 flex items-center justify-between">
-                    <span className="font-medium">Phone / WhatsApp Number</span>
-                    <span className="text-[10px] text-emerald-600 font-semibold">Required</span>
-                  </div>
-                  <div className="p-2 rounded bg-muted/60 flex items-center justify-between">
-                    <span className="font-medium">Email Address</span>
-                    <span className="text-[10px] text-emerald-600 font-semibold">Required</span>
-                  </div>
-                  <div className="p-2 rounded bg-muted/60 flex items-center justify-between">
-                    <span className="font-medium">Yoga Experience Level</span>
-                    <span className="text-[10px] text-indigo-600 font-semibold">Beginner / Int / Adv</span>
-                  </div>
-                  <div className="p-2 rounded bg-muted/60 flex items-center justify-between">
-                    <span className="font-medium">Medical / Injury Notes</span>
-                    <span className="text-[10px] text-slate-500 font-semibold">Optional</span>
-                  </div>
-                  <div className="p-2 rounded bg-muted/60 flex items-center justify-between">
-                    <span className="font-medium">Payment Verification</span>
-                    <span className="text-[10px] text-emerald-600 font-semibold">Auto-Receipt</span>
-                  </div>
+                  {[
+                    { label: "Student Full Name", tag: "Required", color: "text-emerald-600" },
+                    { label: "Phone / WhatsApp Number", tag: "Required", color: "text-emerald-600" },
+                    { label: "Email Address", tag: "Required", color: "text-emerald-600" },
+                    { label: "Yoga Experience Level", tag: "Beginner / Int / Adv", color: "text-indigo-600" },
+                    { label: "Medical / Injury Notes", tag: "Optional", color: "text-slate-500" },
+                    { label: "Payment Verification", tag: "Auto-Receipt", color: "text-emerald-600" },
+                  ].map((f) => (
+                    <div key={f.label} className="p-2 rounded bg-muted/60 flex items-center justify-between">
+                      <span className="font-medium">{f.label}</span>
+                      <span className={`text-[10px] font-semibold ${f.color}`}>{f.tag}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -407,11 +459,45 @@ export function EventKanbanBoard({
                       Approve Event
                     </Button>
                   )}
+
+                  {isAdmin && selectedEvent.status === "APPROVED" && selectedEvent.projectId && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setSelectedEvent(null);
+                        setAssignTarget(selectedEvent);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5"
+                    >
+                      <CheckCircle2 className="size-4" />
+                      Assign Tasks
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* ── Manual Task Assignment Modal ── */}
+      {assignTarget && assignTarget.projectId && (
+        <AssignTasksDialog
+          open={!!assignTarget}
+          onClose={() => {
+            setAssignTarget(null);
+            // Optimistically move to CONVERTED after assignment
+            setEvents((prev) =>
+              prev.map((ev) =>
+                ev.id === assignTarget.id ? { ...ev, status: "CONVERTED" } : ev
+              )
+            );
+          }}
+          proposalId={assignTarget.id}
+          projectId={assignTarget.projectId}
+          eventTitle={assignTarget.title}
+          staffUsers={staffUsers}
+        />
       )}
     </>
   );

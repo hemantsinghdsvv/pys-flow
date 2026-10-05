@@ -6,14 +6,10 @@ import {
   Compass, 
   CheckCircle2, 
   Clock, 
-  Users, 
-  MapPin, 
   Sparkles,
-  DollarSign,
   AlertCircle
 } from "lucide-react";
 import { requireUser, companyFilter } from "@/lib/access";
-import { can } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
@@ -41,6 +37,26 @@ export default async function EventsPage() {
     orderBy: { createdAt: "desc" },
   });
 
+  // Fetch all active staff members for the task assignment modal
+  const staffMembers = await prisma.user.findMany({
+    where: {
+      deletedAt: null,
+      isActive: true,
+      ...scope,
+    },
+    include: {
+      orgRole: { select: { name: true } },
+    },
+    orderBy: { name: "asc" },
+  });
+
+  const staffUsers = staffMembers.map((u) => ({
+    id: u.id,
+    name: u.name,
+    designation: u.designation,
+    orgRoleName: u.orgRole?.name ?? null,
+  }));
+
   const stats = {
     total: proposals.length,
     pendingApproval: proposals.filter((p) => p.status === "SUBMITTED" || p.status === "UNDER_REVIEW" || p.status === "DRAFT").length,
@@ -67,6 +83,7 @@ export default async function EventsPage() {
     objectives: p.objectives,
     targetAudience: p.targetAudience,
     reviewedAt: p.reviewedAt ? p.reviewedAt.toISOString() : null,
+    projectId: p.projectId ?? null,
   }));
 
   return (
@@ -153,7 +170,8 @@ export default async function EventsPage() {
         <EventKanbanBoard 
           events={serializedEvents} 
           isAdmin={isAdmin} 
-          currentUserId={user.id} 
+          currentUserId={user.id}
+          staffUsers={staffUsers}
         />
       </div>
     </div>

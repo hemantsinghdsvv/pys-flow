@@ -9,12 +9,28 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 const YOGA_STAFF = [
-  { name: "Finance", role: "Finance", email: "finance@pragya.yoga", dept: "Finance", level: "Level 2 (Head/Lead)" },
-  { name: "Teacher", role: "Teacher", email: "teacher@pragya.yoga", dept: "Yoga & Teaching", level: "Level 2 (Senior Lead)" },
-  { name: "Schedule Manager", role: "Schedule manager", email: "scheduler@pragya.yoga", dept: "Scheduling & Events", level: "Level 2 (Lead)" },
-  { name: "Instructor", role: "Instructor", email: "instructor@pragya.yoga", dept: "Yoga & Teaching", level: "Level 3 (Staff)" },
-  { name: "Guest Teacher", role: "Guest teacher", email: "guest@pragya.yoga", dept: "Yoga & Teaching", level: "Level 3 (Visiting Faculty)" },
-  { name: "Front Desk", role: "Front desk", email: "frontdesk@pragya.yoga", dept: "Studio Operations & Front Desk", level: "Level 3 (Staff)" },
+  { name: "Dr. Yatendra Amoli", role: "Master Teacher", email: "yatendra@pyshk.com", dept: "Yoga & Teaching", level: "Level 2 (Lead)" },
+  { name: "Dr. Usha Jaiswal", role: "Master Teacher", email: "usha@pyshk.com", dept: "Yoga & Teaching", level: "Level 2 (Lead)" },
+  { name: "Master Shoaib M", role: "Guest teacher", email: "shoaib@pyshk.com", dept: "Yoga & Teaching", level: "Level 3 (Guest)" },
+  { name: "Angela Lee", role: "Instructor", email: "angela@pyshk.com", dept: "Yoga & Teaching", level: "Level 3 (Instructor)" },
+  { name: "Charlotte Chiu", role: "Instructor", email: "charlotte@pyshk.com", dept: "Yoga & Teaching", level: "Level 3 (Instructor)" },
+  { name: "Louise", role: "Instructor", email: "louise@pyshk.com", dept: "Yoga & Teaching", level: "Level 3 (Instructor)" },
+  { name: "Marcus Chen", role: "Instructor", email: "marcus@pyshk.com", dept: "Yoga & Teaching", level: "Level 3 (Instructor)" },
+  { name: "Alanna Em", role: "Instructor", email: "alanna@pyshk.com", dept: "Yoga & Teaching", level: "Level 3 (Instructor)" },
+  { name: "Aly Z", role: "Instructor", email: "aly@pyshk.com", dept: "Yoga & Teaching", level: "Level 3 (Instructor)" },
+  { name: "Jenny", role: "Instructor", email: "jenny@pyshk.com", dept: "Yoga & Teaching", level: "Level 3 (Instructor)" },
+  { name: "Vishal", role: "Yoga Instructor Intern", email: "vishal@pyshk.com", dept: "Yoga & Teaching", level: "Level 4 (Intern)" },
+  { name: "Aman", role: "Yoga Instructor Intern", email: "aman@pyshk.com", dept: "Yoga & Teaching", level: "Level 4 (Intern)" },
+  { name: "Ankit", role: "Yoga Instructor Intern", email: "ankit@pyshk.com", dept: "Yoga & Teaching", level: "Level 4 (Intern)" },
+  { name: "Dr. Rakesh Jaiswal", role: "Master Teacher", email: "dr.rakeshjaiswal@pyshk.com", dept: "Operations", level: "Level 2 (Consultant)" },
+  { name: "Kaushal Singh", role: "Operations Lead", email: "kaushal.singh@pyshk.com", dept: "Operations", level: "Level 2 (Lead)" },
+  { name: "Finance Manager", role: "Finance", email: "finance@pyshk.com", dept: "Operations", level: "Level 2 (Manager)" },
+  { name: "Schedule Manager", role: "Schedule manager", email: "scheduler@pyshk.com", dept: "Operations", level: "Level 2 (Manager)" },
+  { name: "Shop Manager", role: "Operations Lead", email: "shop@pyshk.com", dept: "Operations", level: "Level 3 (Manager)" },
+  { name: "Front Desk", role: "Front desk", email: "frontdesk@pyshk.com", dept: "Operations", level: "Level 3 (Coordinator)" },
+  { name: "Check-in / Reception", role: "Front desk", email: "checkin@pyshk.com", dept: "Operations", level: "Level 3 (Reception)" },
+  { name: "Central Support", role: "Operations Lead", email: "team@pyshk.com", dept: "Operations", level: "Level 3 (Support)" },
+  { name: "Central Coordinator", role: "Operations Lead", email: "pragya.central@pyshk.com", dept: "Operations", level: "Level 3 (Coordinator)" },
 ];
 
 export function LoginForm({ departments = [] }: { departments?: any[] }) {
@@ -78,20 +94,13 @@ export function LoginForm({ departments = [] }: { departments?: any[] }) {
         </div>
         <div>
           <h1 className="text-2xl font-serif font-semibold tracking-normal text-foreground">
-            Pragya Yog School
+            Pragya Yog School - Operations
           </h1>
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#944426] mt-1">
-            Central Hong Kong · Staff & Management Portal
-          </p>
         </div>
       </div>
 
       {/* Admin Section (Aarya Kuldeep) */}
       <div className="space-y-3">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-          <ShieldCheck className="size-4 text-[#00381F]" />
-          Director & Full Administrator
-        </div>
         <Button
           onClick={handleAdminLogin}
           disabled={loadingType !== null}

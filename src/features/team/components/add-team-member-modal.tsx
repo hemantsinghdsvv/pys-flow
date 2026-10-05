@@ -139,7 +139,7 @@ export function AddTeamMemberModal({
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="staff@pragya.yoga"
+                placeholder="staff@pyshk.com"
                 required
                 className="text-xs h-9"
               />

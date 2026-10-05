@@ -9,6 +9,7 @@ import {
   Settings,
   Layers,
   Award,
+  Activity,
   type LucideIcon,
 } from "lucide-react";
 
@@ -87,9 +88,9 @@ export const NAV_GROUPS: NavGroup[] = [
         permission: "feature:settings",
       },
       {
-        title: "Settings",
-        href: "/settings",
-        icon: Settings,
+        title: "Activity Log",
+        href: "/activity-log",
+        icon: Activity,
         permission: "feature:settings",
       },
     ],

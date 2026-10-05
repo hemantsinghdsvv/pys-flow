@@ -11,7 +11,7 @@ export async function loginWithPragya(email: string, passwordHash: string) {
 export async function mockSuperAdminLogin() {
   try {
     const cookieStore = await cookies();
-    const email = "admin@example.com";
+    const email = "admin@pyshk.com";
     
     const adminRole = await prisma.orgRole.findFirst({ where: { name: "Admin" } });
 

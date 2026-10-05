@@ -199,9 +199,18 @@ export async function deleteProject(id: string) {
   const existing = await getProjectOrThrow(id);
   assertCompanyAccess(user, existing.companyId);
 
+  const now = new Date();
+
+  // Soft-delete all tasks belonging to this project
+  await prisma.task.updateMany({
+    where: { projectId: id, deletedAt: null },
+    data: { deletedAt: now },
+  });
+
+  // Soft-delete the project itself
   await prisma.project.update({
     where: { id },
-    data: { deletedAt: new Date() },
+    data: { deletedAt: now },
   });
 
   await logActivity({
@@ -211,11 +220,15 @@ export async function deleteProject(id: string) {
     entityType: "Project",
     entityId: id,
     entityName: existing.name,
+    details: { note: "All associated tasks were also deleted." },
   });
 
   revalidatePath("/projects");
+  revalidatePath("/kanban");
+  revalidatePath("/tasks");
   redirect("/projects");
 }
+
 
 // ─────────────────────── assignment ───────────────────────
 

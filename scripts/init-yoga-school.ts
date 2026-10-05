@@ -51,8 +51,7 @@ async function main() {
     await prisma.user.updateMany({
       where: {
         OR: [
-          { email: "admin@drishti.dev" },
-          { email: "admin@example.com" },
+          { email: "admin@pyshk.com" },
           { isSystemAdmin: true },
         ],
       },
@@ -67,12 +66,12 @@ async function main() {
 
   // 4. Create/update sample staff for each Yoga School role
   const sampleStaff = [
-    { email: "finance@pragya.yoga", name: "Ananya Sharma (Finance)", roleName: "Finance", deptName: "Finance", designation: "Finance Manager" },
-    { email: "teacher@pragya.yoga", name: "Master Devendra (Senior Teacher)", roleName: "Teacher", deptName: "Yoga & Teaching", designation: "Senior Yoga Teacher" },
-    { email: "instructor@pragya.yoga", name: "Pooja Verma (Instructor)", roleName: "Instructor", deptName: "Yoga & Teaching", designation: "Yoga Asana Instructor" },
-    { email: "guest@pragya.yoga", name: "Dr. K. Swaminathan (Guest)", roleName: "Guest teacher", deptName: "Yoga & Teaching", designation: "Visiting Philosophy Teacher" },
-    { email: "frontdesk@pragya.yoga", name: "Rahul Mehta (Front Desk)", roleName: "Front desk", deptName: "Studio Operations & Front Desk", designation: "Studio Coordinator & Reception" },
-    { email: "scheduler@pragya.yoga", name: "Simran Kaur (Scheduler)", roleName: "Schedule manager", deptName: "Scheduling & Events", designation: "Studio Schedule Manager" },
+    { email: "finance@pyshk.com", name: "Ananya Sharma (Finance)", roleName: "Finance", deptName: "Finance", designation: "Finance Manager" },
+    { email: "teacher@pyshk.com", name: "Master Devendra (Senior Teacher)", roleName: "Teacher", deptName: "Yoga & Teaching", designation: "Senior Yoga Teacher" },
+    { email: "instructor@pyshk.com", name: "Pooja Verma (Instructor)", roleName: "Instructor", deptName: "Yoga & Teaching", designation: "Yoga Asana Instructor" },
+    { email: "guest@pyshk.com", name: "Dr. K. Swaminathan (Guest)", roleName: "Guest teacher", deptName: "Yoga & Teaching", designation: "Visiting Philosophy Teacher" },
+    { email: "frontdesk@pyshk.com", name: "Rahul Mehta (Front Desk)", roleName: "Front desk", deptName: "Studio Operations & Front Desk", designation: "Studio Coordinator & Reception" },
+    { email: "scheduler@pyshk.com", name: "Simran Kaur (Scheduler)", roleName: "Schedule manager", deptName: "Scheduling & Events", designation: "Studio Schedule Manager" },
   ];
 
   for (const s of sampleStaff) {

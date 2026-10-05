@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/access";
+import { logActivity } from "@/lib/activity";
 
 export async function createOrgRole(values: {
   name: string;
@@ -69,6 +70,97 @@ export async function assignStaffRole(values: {
 
   return { success: true };
 }
+
+export async function updateStaffMemberProfile(values: {
+  userId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  roleId: string;
+  departmentId?: string;
+  companyId?: string;
+  designation?: string;
+  isActive?: boolean;
+}) {
+  const user = await requireUser();
+  const isAdmin = user.hierarchyLevel === 1 || user.isSystemAdmin === true;
+  if (!isAdmin) {
+    throw new Error("Only the School Director / Admin has permission to edit staff details and roles.");
+  }
+
+  const target = await prisma.user.findUnique({
+    where: { id: values.userId },
+  });
+  if (!target) {
+    throw new Error("Staff member not found.");
+  }
+
+  const role = await prisma.orgRole.findUnique({
+    where: { id: values.roleId },
+  });
+  if (!role) throw new Error("Selected role not found.");
+
+  const cleanEmail = values.email.trim().toLowerCase();
+  if (cleanEmail !== target.email.toLowerCase()) {
+    const existing = await prisma.user.findUnique({
+      where: { email: cleanEmail },
+    });
+    if (existing && existing.id !== values.userId) {
+      throw new Error(`A user with email ${values.email} already exists.`);
+    }
+  }
+
+  const isRoleAdmin = role.name.toLowerCase() === "admin" || role.hierarchyLevel === 1;
+  const deptId = values.departmentId && values.departmentId !== "none" ? values.departmentId : null;
+  const compId = values.companyId && values.companyId !== "none" ? values.companyId : null;
+
+  const updatedUser = await prisma.user.update({
+    where: { id: values.userId },
+    data: {
+      name: values.name.trim(),
+      email: cleanEmail,
+      phone: values.phone?.trim() || null,
+      roleId: values.roleId,
+      hierarchyLevel: role.hierarchyLevel ?? 3,
+      departmentId: deptId,
+      companyId: compId,
+      designation: values.designation?.trim() || role.name,
+      isActive: values.isActive ?? true,
+      isSystemAdmin: isRoleAdmin,
+    },
+  });
+
+  if (compId) {
+    await prisma.studentProfile.updateMany({
+      where: { userId: values.userId },
+      data: { companyId: compId },
+    }).catch(() => {});
+  }
+
+  await logActivity({
+    userId: user.id,
+    companyId: compId,
+    action: "UPDATE",
+    entityType: "Staff Profile",
+    entityId: updatedUser.id,
+    entityName: updatedUser.name,
+    details: {
+      role: role.name,
+      designation: updatedUser.designation,
+      email: updatedUser.email,
+    },
+  });
+
+  revalidatePath("/team");
+  revalidatePath("/activity-log");
+  revalidatePath("/internship");
+  revalidatePath("/projects");
+  revalidatePath("/dashboard");
+
+  return { success: true, user: updatedUser };
+}
+
+
 
 export async function addTeamMember(values: {
   name: string;
@@ -138,9 +230,10 @@ export async function removeTeamMember(userId: string) {
   const target = await prisma.user.findUnique({ where: { id: userId } });
   if (!target) throw new Error("Staff member not found.");
 
-  if (target.isSystemAdmin || target.email === "admin@example.com" || target.email === "admin@pragya.yoga") {
+  if (target.isSystemAdmin || target.email === "admin@pyshk.com") {
     throw new Error("The Director / Admin account cannot be removed.");
   }
+
 
   if (!isAdmin) {
     if ((target.hierarchyLevel ?? 4) <= (currentUser.hierarchyLevel ?? 4)) {

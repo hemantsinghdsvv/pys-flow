@@ -39,20 +39,16 @@ export function AppSidebar({ allowedHrefs = [], departments = [], activeRoleCont
                 <div className="relative flex aspect-square size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-md ring-1 ring-white/20 p-1 group-hover/brand:scale-105 transition-transform duration-200">
                   <Image
                     src="/logo.svg"
-                    alt="Pragya Yog School"
+                    alt="PYS Flow"
                     width={48}
                     height={48}
                     className="object-contain"
                     priority
                   />
                 </div>
-                <div className="flex flex-col text-left leading-tight group-data-[collapsible=icon]:hidden overflow-hidden">
-                  <span className="truncate font-serif text-[17px] font-semibold tracking-normal text-sidebar-foreground">
-                    Pragya Yog School
-                  </span>
-                  <span className="truncate font-sans text-[11px] font-semibold tracking-wider text-[#D9AE29] flex items-center gap-1.5 mt-0.5">
-                    <span className="inline-block size-1.5 rounded-full bg-[#9D9D48] animate-pulse" />
-                    Central HK · PYS Portal
+                <div className="flex flex-col justify-center text-left leading-tight group-data-[collapsible=icon]:hidden overflow-hidden h-full py-1">
+                  <span className="truncate font-serif text-[19px] font-bold tracking-tight text-sidebar-foreground">
+                    PYS Flow
                   </span>
                 </div>
               </Link>
