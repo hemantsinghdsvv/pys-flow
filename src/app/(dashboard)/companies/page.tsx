@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-export const metadata: Metadata = { title: "Companies" };
+export const metadata: Metadata = { title: "Studio Locations" };
 
 export default async function CompaniesPage() {
   const user = await requireUser();
@@ -26,12 +26,12 @@ export default async function CompaniesPage() {
   return (
     <>
       <PageHeader
-        title="Companies"
-        description="Manage every company running internships on DRISHTI."
+        title="Studio Locations"
+        description="Manage studio locations for Pragya Yog School (Pragya Central and Pragya LKF)."
         actions={
-          <Button asChild>
+          <Button asChild className="bg-[#00381F] hover:bg-[#074b2b] text-white">
             <Link href="/companies/new">
-              <Plus className="size-4" /> Add company
+              <Plus className="size-4" /> Add Studio
             </Link>
           </Button>
         }
@@ -40,12 +40,12 @@ export default async function CompaniesPage() {
       {companies.length === 0 ? (
         <EmptyState
           icon={Building2}
-          title="No companies yet"
-          description="Create your first company to start managing internship batches, projects, and students."
+          title="No studio locations yet"
+          description="Add your studio locations to manage programs, batches, and operations."
           action={
             <Button asChild size="sm">
               <Link href="/companies/new">
-                <Plus className="size-4" /> Add company
+                <Plus className="size-4" /> Add Studio
               </Link>
             </Button>
           }

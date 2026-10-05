@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Layers, Plus, GraduationCap, FolderKanban, CalendarRange } from "lucide-react";
+import { Layers, Plus, Users, FolderKanban, CalendarRange } from "lucide-react";
 import { format } from "date-fns";
 import { redirect } from "next/navigation";
 import { requireUser, companyFilter } from "@/lib/access";
@@ -13,43 +13,68 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-export const metadata: Metadata = { title: "Batches" };
+import { CreateBatchDialog } from "@/features/batches/components/create-batch-dialog";
+
+export const metadata: Metadata = { title: "Batches & Cohorts - Pragya Yog School" };
 
 export default async function BatchesPage() {
   const user = await requireUser();
-  if (!can(user, "feature:batches") && !can(user, "batch:read")) {
+  const hasAccess =
+    user.isSystemAdmin === true ||
+    (user.hierarchyLevel != null && user.hierarchyLevel <= 2) ||
+    can(user, "feature:batches") ||
+    can(user, "batch:read");
+
+  if (!hasAccess) {
     redirect("/dashboard");
   }
+
   const scope = await companyFilter(user);
 
-  const batches = await prisma.batch.findMany({
-    where: { ...scope },
-    orderBy: { startDate: "desc" },
-    include: {
-      company: { select: { name: true, themeColor: true } },
-      _count: {
-        select: {
-          students: { where: { deletedAt: null } },
-          projects: { where: { deletedAt: null } },
+  const [batches, studios] = await Promise.all([
+    prisma.batch.findMany({
+      where: { ...scope, deletedAt: null },
+      orderBy: { startDate: "desc" },
+      include: {
+        company: { select: { id: true, name: true, themeColor: true } },
+        _count: {
+          select: {
+            students: { where: { deletedAt: null } },
+            projects: { where: { deletedAt: null } },
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.company.findMany({
+      where: { deletedAt: null, status: "ACTIVE" },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
-  const canCreate = user.role !== "EXECUTIVE";
+  const canCreate =
+    user.isSystemAdmin === true ||
+    (user.hierarchyLevel != null && user.hierarchyLevel <= 2) ||
+    can(user, "batch:create");
 
   return (
     <>
       <PageHeader
-        title="Internship Batches"
-        description="Cohorts of students running internships together."
+        title="Batches & Cohorts"
+        description="Cohorts of students and trainees running teacher trainings, programs, and workshops together."
         actions={
           canCreate && (
-            <Button asChild>
-              <Link href="/batches/new">
-                <Plus className="size-4" /> New batch
-              </Link>
-            </Button>
+            <div className="flex items-center gap-2">
+              <CreateBatchDialog
+                studios={studios}
+                trigger={
+                  <Button className="bg-[#00381F] hover:bg-[#0A4A2B] text-[#F5EFE5] text-xs h-9 gap-1.5 shadow-xs font-medium">
+                    <Plus className="size-4" />
+                    <span>Create Batch</span>
+                  </Button>
+                }
+              />
+            </div>
           )
         }
       />
@@ -58,14 +83,17 @@ export default async function BatchesPage() {
         <EmptyState
           icon={Layers}
           title="No batches yet"
-          description="Create a batch like “Summer Internship 2026” and assign students to it."
+          description="Create a batch like “TTC Morning Cohort 2026” and assign trainees or link initiatives to it."
           action={
             canCreate && (
-              <Button asChild size="sm">
-                <Link href="/batches/new">
-                  <Plus className="size-4" /> New batch
-                </Link>
-              </Button>
+              <CreateBatchDialog
+                studios={studios}
+                trigger={
+                  <Button size="sm" className="bg-[#00381F] hover:bg-[#0A4A2B] text-[#F5EFE5] gap-1.5">
+                    <Plus className="size-4" /> Create First Batch
+                  </Button>
+                }
+              />
             )
           }
         />
@@ -96,8 +124,8 @@ export default async function BatchesPage() {
                   </p>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
-                      <GraduationCap className="size-4" />
-                      {batch._count.students} students
+                      <Users className="size-4" />
+                      {batch._count.students} staff members
                     </span>
                     <span className="flex items-center gap-1.5">
                       <FolderKanban className="size-4" />

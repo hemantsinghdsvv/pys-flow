@@ -93,15 +93,15 @@ function AddMemberDialog({
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Person</Label>
+            <Label>Staff Member</Label>
             <Select value={userId} onValueChange={setUserId}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a person" />
+                <SelectValue placeholder="Select a staff member" />
               </SelectTrigger>
               <SelectContent>
                 {people.length === 0 ? (
                   <div className="p-2 text-center text-sm text-muted-foreground">
-                    No students available. Assign students to the project first.
+                    No staff members available. Assign staff members to the project first.
                   </div>
                 ) : (
                   people.map((p) => (
@@ -114,7 +114,7 @@ function AddMemberDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Team role</Label>
+            <Label>Yoga / Operational Role</Label>
             <Select value={role} onValueChange={(v) => setRole(v as TeamRole)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
@@ -178,7 +178,7 @@ export function TeamsPanel({
           <Input
             value={teamName}
             onChange={(e) => setTeamName(e.target.value)}
-            placeholder="New team name, e.g. Frontend Squad"
+            placeholder="New team name, e.g. Yoga Instructor Team, Studio Care Squad..."
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -204,7 +204,7 @@ export function TeamsPanel({
         <EmptyState
           icon={Users}
           title="No teams yet"
-          description="Group assigned students into teams with roles like Frontend Developer or QA."
+          description="Group assigned staff into operational teams with roles like Lead Teacher, Asana Instructor, or Front Desk."
         />
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">

@@ -18,10 +18,10 @@ import type { CompanyStatus,
   ProposalStatus } from '@prisma/client';
 
 export const ROLE_LABELS: Record<string, string> = {
-  MANAGER: "Head / Manager",
-  SENIOR: "Lead / Senior",
-  EXECUTIVE: "Staff / Executive",
-  INTERN: "Sub-role / Intern",
+  MANAGER: "Director / Studio Head",
+  SENIOR: "Supervisor / Lead Teacher",
+  EXECUTIVE: "Teacher / Staff Member",
+  INTERN: "Instructor / Trainee",
 };
 
 export const COMPANY_STATUS_LABELS: Record<CompanyStatus, string> = {
@@ -80,20 +80,20 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
 };
 
 export const TEAM_ROLE_LABELS: Record<TeamRole, string> = {
-  FRONTEND_DEVELOPER: "Frontend Developer",
-  BACKEND_DEVELOPER: "Backend Developer",
-  FULLSTACK_DEVELOPER: "Full Stack Developer",
-  REACT_DEVELOPER: "React Developer",
-  FLUTTER_DEVELOPER: "Flutter Developer",
-  PYTHON_DEVELOPER: "Python Developer",
-  ML_ENGINEER: "ML Engineer",
-  AI_ENGINEER: "AI Engineer",
-  PROMPT_ENGINEER: "Prompt Engineer",
-  UIUX_DESIGNER: "UI/UX Designer",
-  QA: "QA",
-  CONTENT_WRITER: "Content Writer",
-  DOCUMENTATION: "Documentation",
-  RESEARCH: "Research",
+  FULLSTACK_DEVELOPER: "Lead Yoga Teacher / Master Trainer",
+  FRONTEND_DEVELOPER: "Hatha & Vinyasa Instructor",
+  BACKEND_DEVELOPER: "Ashtanga Yoga Teacher",
+  REACT_DEVELOPER: "Pranayama & Breathwork Guide",
+  FLUTTER_DEVELOPER: "Meditation & Mindfulness Guide",
+  PYTHON_DEVELOPER: "Yin & Restorative Specialist",
+  ML_ENGINEER: "Yoga Anatomy & Alignment Specialist",
+  AI_ENGINEER: "Sound Healing & Mantra Facilitator",
+  PROMPT_ENGINEER: "Yoga Philosophy & Ethics Teacher",
+  UIUX_DESIGNER: "Studio Operations & Front Desk",
+  QA: "Class Quality & Safety Assessor",
+  CONTENT_WRITER: "Curriculum & Workshop Coordinator",
+  DOCUMENTATION: "Student Records & Certification",
+  RESEARCH: "Ayurveda & Holistic Wellness Advisor",
 };
 
 export const DAILY_LOG_STATUS_LABELS: Record<DailyLogStatus, string> = {

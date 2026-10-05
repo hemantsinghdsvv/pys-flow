@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreateProjectModal } from "@/features/projects/components/create-project-modal";
+import { CreateBatchDialog } from "@/features/batches/components/create-batch-dialog";
 
 export const metadata: Metadata = { title: "Projects & Initiatives - Pragya Yog School" };
 
@@ -77,30 +78,41 @@ export default async function ProjectsPage({
 
   const scope = await companyFilter(user);
 
-  const projects = await prisma.project.findMany({
-    where: {
-      ...scope,
-      deletedAt: null,
-      ...(statusFilter && statusFilter !== "ALL" ? { status: statusFilter as any } : {}),
-    },
-    include: {
-      company: { select: { name: true, themeColor: true } },
-      tasks: {
-        where: { deletedAt: null },
-        select: { id: true, status: true },
+  const [projects, allProjects, studios, batches] = await Promise.all([
+    prisma.project.findMany({
+      where: {
+        ...scope,
+        deletedAt: null,
+        ...(statusFilter && statusFilter !== "ALL" ? { status: statusFilter as any } : {}),
       },
-    },
-    orderBy: [
-      { status: "asc" },
-      { createdAt: "desc" },
-    ],
-  });
-
-  // Calculate metrics
-  const allProjects = await prisma.project.findMany({
-    where: { ...scope, deletedAt: null },
-    select: { status: true },
-  });
+      include: {
+        company: { select: { id: true, name: true, themeColor: true } },
+        batch: { select: { id: true, name: true } },
+        tasks: {
+          where: { deletedAt: null },
+          select: { id: true, status: true },
+        },
+      },
+      orderBy: [
+        { status: "asc" },
+        { createdAt: "desc" },
+      ],
+    }),
+    prisma.project.findMany({
+      where: { ...scope, deletedAt: null },
+      select: { status: true },
+    }),
+    prisma.company.findMany({
+      where: { deletedAt: null, status: "ACTIVE" },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.batch.findMany({
+      where: { deletedAt: null, ...scope },
+      select: { id: true, name: true },
+      orderBy: { startDate: "desc" },
+    }),
+  ]);
 
   const totalCount = allProjects.length;
   const activeCount = allProjects.filter((p) => p.status === "ACTIVE").length;
@@ -115,13 +127,30 @@ export default async function ProjectsPage({
         actions={
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" asChild className="h-9 text-xs">
-              <Link href="/tasks">
-                <ListTodo className="size-3.5 mr-1.5" />
-                View All Tasks
+              <Link href="/batches">
+                <Layers className="size-3.5 mr-1.5" />
+                Batches & Cohorts
               </Link>
             </Button>
             {canCreate && (
+              <CreateBatchDialog
+                studios={studios}
+                trigger={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 text-xs border-[#00381F]/30 text-[#00381F] dark:text-[#D9AE29] hover:bg-[#00381F]/5 gap-1.5 shadow-2xs font-medium"
+                  >
+                    <Plus className="size-3.5" />
+                    <span>Create Batch</span>
+                  </Button>
+                }
+              />
+            )}
+            {canCreate && (
               <CreateProjectModal
+                batches={batches}
+                studios={studios}
                 trigger={
                   <Button
                     size="sm"
@@ -249,7 +278,24 @@ export default async function ProjectsPage({
 
         <div className="flex items-center gap-2">
           {canCreate && (
+            <CreateBatchDialog
+              studios={studios}
+              trigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs gap-1 border-dashed border-[#00381F]/40 hover:border-[#00381F] text-[#00381F] dark:text-[#D9AE29]"
+                >
+                  <Plus className="size-3.5" />
+                  <span>New Batch</span>
+                </Button>
+              }
+            />
+          )}
+          {canCreate && (
             <CreateProjectModal
+              batches={batches}
+              studios={studios}
               trigger={
                 <Button
                   variant="outline"
@@ -278,6 +324,8 @@ export default async function ProjectsPage({
           action={
             canCreate && (
               <CreateProjectModal
+                batches={batches}
+                studios={studios}
                 trigger={
                   <Button size="sm" className="bg-[#00381F] hover:bg-[#0A4A2B] text-[#F5EFE5] gap-1.5">
                     <Plus className="size-4" />
@@ -335,10 +383,20 @@ export default async function ProjectsPage({
                       >
                         {project.name}
                       </Link>
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <Sparkles className="size-3 text-[#D9AE29]" />
-                        Pragya Operational Initiative
-                      </span>
+                      {project.batch ? (
+                        <Link
+                          href={`/batches/${project.batch.id}`}
+                          className="text-[11px] text-[#00381F] dark:text-[#D9AE29] font-medium flex items-center gap-1 mt-0.5 hover:underline"
+                        >
+                          <Layers className="size-3 text-[#00381F] dark:text-[#D9AE29]" />
+                          Cohort: {project.batch.name}
+                        </Link>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Sparkles className="size-3 text-[#D9AE29]" />
+                          Pragya Operational Initiative
+                        </span>
+                      )}
                     </div>
 
                     {/* Description */}

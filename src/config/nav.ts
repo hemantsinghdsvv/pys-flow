@@ -7,6 +7,8 @@ import {
   GraduationCap,
   Users,
   Settings,
+  Layers,
+  Award,
   type LucideIcon,
 } from "lucide-react";
 
@@ -41,6 +43,11 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Core Modules",
     items: [
       {
+        title: "Batches & Cohorts",
+        href: "/batches",
+        icon: Layers,
+      },
+      {
         title: "Projects",
         href: "/projects",
         icon: FolderGit2,
@@ -66,8 +73,7 @@ export const NAV_GROUPS: NavGroup[] = [
       {
         title: "Internships",
         href: "/internship",
-        icon: GraduationCap,
-        permission: "feature:students",
+        icon: Award,
       },
     ],
   },

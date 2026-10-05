@@ -9,6 +9,7 @@ import {
   Calendar,
   AlertCircle,
   Sparkles,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -32,20 +33,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createSimpleProject } from "@/features/projects/actions";
+import { CreateBatchDialog } from "@/features/batches/components/create-batch-dialog";
 
 interface CreateProjectModalProps {
   trigger?: React.ReactNode;
   defaultOpen?: boolean;
+  batches?: { id: string; name: string }[];
+  studios?: { id: string; name: string }[];
   onSuccess?: () => void;
 }
 
 export function CreateProjectModal({
   trigger,
   defaultOpen = false,
+  batches: initialBatches = [],
+  studios = [],
   onSuccess,
 }: CreateProjectModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(defaultOpen);
+  const [batchesList, setBatchesList] = useState(initialBatches);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +63,7 @@ export function CreateProjectModal({
     priority: "MEDIUM" as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
     startDate: new Date().toISOString().slice(0, 10),
     endDate: "",
+    batchId: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -76,6 +84,7 @@ export function CreateProjectModal({
           priority: formData.priority,
           startDate: formData.startDate || undefined,
           endDate: formData.endDate || undefined,
+          batchId: formData.batchId || undefined,
         });
 
         if (res.success) {
@@ -90,6 +99,7 @@ export function CreateProjectModal({
             priority: "MEDIUM",
             startDate: new Date().toISOString().slice(0, 10),
             endDate: "",
+            batchId: "",
           });
           router.refresh();
           if (onSuccess) onSuccess();
@@ -238,6 +248,52 @@ export function CreateProjectModal({
                 className="h-9.5 text-xs focus-visible:ring-[#00381F]"
               />
             </div>
+          </div>
+
+          {/* Batch / Cohort Selection */}
+          <div className="space-y-1.5 pt-1 border-t border-border/60">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-foreground flex items-center gap-1">
+                <Layers className="size-3 text-muted-foreground" />
+                Linked Batch / Cohort (Optional)
+              </Label>
+              <CreateBatchDialog
+                studios={studios}
+                onSuccess={(newBatch) => {
+                  setBatchesList((prev) => [
+                    { id: newBatch.id, name: newBatch.name },
+                    ...prev,
+                  ]);
+                  setFormData((prev) => ({ ...prev, batchId: newBatch.id }));
+                }}
+                trigger={
+                  <button
+                    type="button"
+                    className="text-xs text-[#00381F] dark:text-[#D9AE29] hover:underline font-medium cursor-pointer"
+                  >
+                    + Create Batch
+                  </button>
+                }
+              />
+            </div>
+            <Select
+              value={formData.batchId || "none"}
+              onValueChange={(val) =>
+                setFormData({ ...formData, batchId: val === "none" ? "" : val })
+              }
+            >
+              <SelectTrigger className="h-9.5 text-xs w-full">
+                <SelectValue placeholder="No batch linked (Independent)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No batch linked (Independent)</SelectItem>
+                {batchesList.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter className="pt-3 border-t border-border flex items-center justify-end gap-2">

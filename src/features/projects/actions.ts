@@ -66,6 +66,7 @@ export type SimpleProjectInput = {
   priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   startDate?: string;
   endDate?: string;
+  batchId?: string;
 };
 
 export async function createSimpleProject(input: SimpleProjectInput) {
@@ -92,6 +93,7 @@ export async function createSimpleProject(input: SimpleProjectInput) {
       priority: input.priority || "MEDIUM",
       startDate: input.startDate ? new Date(input.startDate) : null,
       endDate: input.endDate ? new Date(input.endDate) : null,
+      batchId: input.batchId || null,
       companyId,
       createdById: user.id,
     },
@@ -225,8 +227,9 @@ export async function assignMentors(projectId: string, userIds: string[]) {
   const valid = await prisma.user.findMany({
     where: {
       id: { in: userIds },
-      companyId: project.companyId,
-      
+      ...(project.companyId
+        ? { OR: [{ companyId: project.companyId }, { companyId: null }] }
+        : {}),
     },
     select: { id: true },
   });
@@ -266,8 +269,9 @@ export async function assignStudents(projectId: string, userIds: string[]) {
   const valid = await prisma.user.findMany({
     where: {
       id: { in: userIds },
-      companyId: project.companyId,
-      isSystemAdmin: false,
+      ...(project.companyId
+        ? { OR: [{ companyId: project.companyId }, { companyId: null }] }
+        : {}),
     },
     select: { id: true },
   });
@@ -417,13 +421,47 @@ export async function addTeamMember(
   isLeader: boolean
 ) {
   const user = await requirePermission("team:manage");
-  const team = await prisma.team.findUnique({ where: { id: teamId } });
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    include: { project: true },
+  });
   if (!team) throw new Error("Team not found");
   assertCompanyAccess(user, team.companyId);
 
-  const member = await prisma.user.findUnique({ where: { id: userId } });
-  if (!member || member.companyId !== team.companyId) {
-    throw new Error("User does not belong to this company.");
+  const member = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { studentProfile: true },
+  });
+  if (!member) {
+    throw new Error("User not found.");
+  }
+
+  // A member belongs to this company/studio if:
+  // 1. Their companyId matches team.companyId
+  // 2. Their companyId is null (global school member)
+  // 3. Their studentProfile matches team.companyId
+  // 4. They are already enrolled in this project
+  const isDirectMatch =
+    !team.companyId ||
+    !member.companyId ||
+    member.companyId === team.companyId ||
+    member.studentProfile?.companyId === team.companyId;
+
+  if (!isDirectMatch && team.projectId) {
+    const isProjectMember = await prisma.projectStudent.findUnique({
+      where: { projectId_userId: { projectId: team.projectId, userId } },
+    });
+    if (!isProjectMember) {
+      throw new Error("User does not belong to this studio location or project.");
+    }
+  }
+
+  // Ensure member is tied to the studio location if they didn't have one set
+  if (!member.companyId && team.companyId) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { companyId: team.companyId },
+    });
   }
 
   if (isLeader) {

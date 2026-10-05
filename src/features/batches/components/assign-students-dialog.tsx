@@ -35,7 +35,7 @@ export function AssignStudentsDialog({
     startTransition(async () => {
       try {
         await assignStudentsToBatch(batchId, selected);
-        toast.success(`${selected.length} student(s) assigned`);
+        toast.success(`${selected.length} member(s) assigned to batch`);
         setSelected([]);
         setOpen(false);
       } catch (err) {
@@ -47,36 +47,37 @@ export function AssignStudentsDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <UserPlus className="size-4" /> Assign students
+        <Button size="sm" variant="outline" className="text-xs h-8 gap-1.5 border-[#00381F]/30 text-[#00381F] dark:text-[#D9AE29] hover:bg-[#00381F]/5">
+          <UserPlus className="size-3.5" /> Assign Members
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Assign students</DialogTitle>
+          <DialogTitle>Assign Members to Batch</DialogTitle>
           <DialogDescription>
-            Students of this company who are not in any batch yet.
+            Select members across any level or role (Lead Teachers, Supervisors, Instructors, Staff) to assign to this batch.
           </DialogDescription>
         </DialogHeader>
         {options.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            All students of this company are already assigned to a batch.
+            All active studio members are already assigned to this batch.
           </p>
         ) : (
           <MultiSelect
             options={options}
             selected={selected}
             onChange={setSelected}
-            placeholder="Select students..."
+            placeholder="Select members..."
           />
         )}
         <DialogFooter>
           <Button
             onClick={handleAssign}
             disabled={pending || selected.length === 0}
+            className="bg-[#00381F] hover:bg-[#0A4A2B] text-[#F5EFE5] text-xs h-9 min-w-[120px]"
           >
-            {pending && <Loader2 className="size-4 animate-spin" />}
-            Assign {selected.length > 0 && `(${selected.length})`}
+            {pending && <Loader2 className="size-4 animate-spin mr-1.5" />}
+            Assign Members {selected.length > 0 && `(${selected.length})`}
           </Button>
         </DialogFooter>
       </DialogContent>

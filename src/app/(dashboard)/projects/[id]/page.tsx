@@ -9,7 +9,10 @@ import {
   Globe,
   GraduationCap,
   UserCog,
+  Users,
   ListTodo,
+  Layers,
+  Plus,
 } from "lucide-react";
 import { requireUser, assertCompanyAccess } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
@@ -27,6 +30,7 @@ import { MilestonesPanel } from "@/features/projects/components/milestones-panel
 import { TeamsPanel } from "@/features/projects/components/teams-panel";
 import { RepositoriesPanel } from "@/features/github/components/repositories-panel";
 import { DeleteProjectButton } from "@/features/projects/components/delete-project-button";
+import { LinkBatchDialog } from "@/features/batches/components/link-batch-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +50,7 @@ export default async function ProjectDetailPage({
     where: { id },
     include: {
       company: { select: { id: true, name: true, themeColor: true } },
-      batch: { select: { id: true, name: true } },
+      batch: { select: { id: true, name: true, status: true, startDate: true, endDate: true } },
       mentors: {
         include: {
           user: { select: { id: true, name: true, image: true, email: true } },
@@ -100,29 +104,84 @@ export default async function ProjectDetailPage({
     (user.role === "EXECUTIVE" &&
       project.mentors.some((m) => m.userId === user.id));
 
-  // People available to assign.
-  const [availableMentors, availableStudents] = canManage
-    ? await Promise.all([
-        prisma.user.findMany({
+  // People and batches available to assign.
+  const [availableMentors, availableStudents, availableBatches, studios] = await Promise.all([
+    canManage
+      ? prisma.user.findMany({
           where: {
-            companyId: project.companyId,
-            
             isActive: true,
             id: { notIn: project.mentors.map((m) => m.userId) },
+            AND: [
+              {
+                OR: [
+                  { hierarchyLevel: 2 },
+                  { orgRole: { hierarchyLevel: 2 } },
+                ],
+              },
+              ...(project.companyId
+                ? [
+                    {
+                      OR: [
+                        { companyId: project.companyId },
+                        { companyId: null },
+                      ],
+                    },
+                  ]
+                : []),
+            ],
           },
-          select: { id: true, name: true },
-        }),
-        prisma.user.findMany({
+          include: { orgRole: true },
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([]),
+    canManage
+      ? prisma.user.findMany({
           where: {
-            companyId: project.companyId,
-            isSystemAdmin: false,
             isActive: true,
             id: { notIn: project.students.map((s) => s.userId) },
+            AND: [
+              {
+                OR: [
+                  { hierarchyLevel: 3 },
+                  { orgRole: { hierarchyLevel: 3 } },
+                ],
+              },
+              ...(project.companyId
+                ? [
+                    {
+                      OR: [
+                        { companyId: project.companyId },
+                        { companyId: null },
+                      ],
+                    },
+                  ]
+                : []),
+            ],
           },
-          select: { id: true, name: true },
-        }),
-      ])
-    : [[], []];
+          include: { orgRole: true },
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([]),
+    prisma.batch.findMany({
+      where: {
+        deletedAt: null,
+        ...(project.companyId ? { companyId: project.companyId } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+      },
+      orderBy: { startDate: "desc" },
+    }),
+    prisma.company.findMany({
+      where: { deletedAt: null, status: "ACTIVE" },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   return (
     <>
@@ -165,6 +224,59 @@ export default async function ProjectDetailPage({
           label={PRIORITY_LABELS[project.priority]}
         />
         <Badge variant="outline">{DIFFICULTY_LABELS[project.difficulty]}</Badge>
+
+        {/* Batch / Cohort Badge & Link Action */}
+        {project.batch ? (
+          <div className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 rounded-md px-2.5 py-1 text-xs font-medium text-emerald-800 dark:text-emerald-300">
+            <Link
+              href={`/batches/${project.batch.id}`}
+              className="flex items-center gap-1 hover:underline"
+            >
+              <Layers className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Batch: {project.batch.name}</span>
+            </Link>
+            {canManage && (
+              <LinkBatchDialog
+                projectId={project.id}
+                projectName={project.name}
+                currentBatchId={project.batch.id}
+                batches={availableBatches}
+                studios={studios}
+                defaultCompanyId={project.companyId ?? undefined}
+                trigger={
+                  <button
+                    type="button"
+                    className="text-[11px] underline opacity-70 hover:opacity-100 ml-1 cursor-pointer"
+                  >
+                    (change)
+                  </button>
+                }
+              />
+            )}
+          </div>
+        ) : (
+          canManage && (
+            <LinkBatchDialog
+              projectId={project.id}
+              projectName={project.name}
+              currentBatchId={null}
+              batches={availableBatches}
+              studios={studios}
+              defaultCompanyId={project.companyId ?? undefined}
+              trigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs border-dashed gap-1 text-[#00381F] dark:text-[#D9AE29] hover:bg-[#00381F]/5"
+                >
+                  <Plus className="size-3" />
+                  <span>Link or Create Batch</span>
+                </Button>
+              }
+            />
+          )
+        )}
+
         {project.startDate && project.endDate && (
           <span className="text-sm text-muted-foreground">
             {format(project.startDate, "d MMM yyyy")} –{" "}
@@ -246,7 +358,7 @@ export default async function ProjectDetailPage({
               <Card>
                 <CardHeader className="flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <UserCog className="size-4" /> Mentors
+                    <UserCog className="size-4" /> Team Leads / Supervisors
                   </CardTitle>
                   {canManage && (
                     <AssignPeopleDialog
@@ -254,7 +366,7 @@ export default async function ProjectDetailPage({
                       kind="mentor"
                       options={availableMentors.map((m) => ({
                         value: m.id,
-                        label: m.name,
+                        label: m.orgRole?.name ? `${m.name} · Level 2 (${m.orgRole.name})` : `${m.name} · Level 2`,
                       }))}
                     />
                   )}
@@ -262,14 +374,14 @@ export default async function ProjectDetailPage({
                 <CardContent>
                   {project.mentors.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      No mentors assigned.
+                      No team leads or supervisors assigned.
                     </p>
                   ) : (
                     <ul className="space-y-2">
                       {project.mentors.map(({ user: mentor }) => (
                         <li key={mentor.id} className="flex items-center gap-2.5">
                           <UserAvatar name={mentor.name} image={mentor.image} />
-                          <span className="flex-1 truncate text-sm">
+                          <span className="flex-1 truncate text-sm font-medium">
                             {mentor.name}
                           </span>
                           {canManage && (
@@ -289,7 +401,7 @@ export default async function ProjectDetailPage({
               <Card>
                 <CardHeader className="flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <GraduationCap className="size-4" /> Students
+                    <Users className="size-4" /> Staff Members
                   </CardTitle>
                   {canManage && (
                     <AssignPeopleDialog
@@ -297,7 +409,7 @@ export default async function ProjectDetailPage({
                       kind="student"
                       options={availableStudents.map((s) => ({
                         value: s.id,
-                        label: s.name,
+                        label: s.orgRole?.name ? `${s.name} · Level 3 (${s.orgRole.name})` : `${s.name} · Level 3`,
                       }))}
                     />
                   )}
@@ -305,19 +417,16 @@ export default async function ProjectDetailPage({
                 <CardContent>
                   {project.students.length === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                      No students assigned.
+                      No staff members assigned.
                     </p>
                   ) : (
                     <ul className="space-y-2">
                       {project.students.map(({ user: student }) => (
                         <li key={student.id} className="flex items-center gap-2.5">
                           <UserAvatar name={student.name} image={student.image} />
-                          <Link
-                            href={`/students/${student.id}`}
-                            className="flex-1 truncate text-sm hover:underline"
-                          >
+                          <span className="flex-1 truncate text-sm font-medium">
                             {student.name}
-                          </Link>
+                          </span>
                           {canManage && (
                             <RemovePersonButton
                               projectId={project.id}
@@ -328,6 +437,97 @@ export default async function ProjectDetailPage({
                         </li>
                       ))}
                     </ul>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Batch / Cohort Card */}
+              <Card>
+                <CardHeader className="flex-row items-center justify-between pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Layers className="size-4" /> Batch / Cohort
+                  </CardTitle>
+                  {canManage && (
+                    <LinkBatchDialog
+                      projectId={project.id}
+                      projectName={project.name}
+                      currentBatchId={project.batch?.id ?? null}
+                      batches={availableBatches}
+                      studios={studios}
+                      defaultCompanyId={project.companyId ?? undefined}
+                      trigger={
+                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-[#00381F] dark:text-[#D9AE29]">
+                          <Plus className="size-3" />
+                          <span>{project.batch ? "Change" : "Connect"}</span>
+                        </Button>
+                      }
+                    />
+                  )}
+                </CardHeader>
+                <CardContent className="text-sm">
+                  {project.batch ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Link
+                          href={`/batches/${project.batch.id}`}
+                          className="font-semibold text-foreground hover:text-[#00381F] dark:hover:text-[#D9AE29] hover:underline flex items-center gap-1.5"
+                        >
+                          <Layers className="size-4 text-[#00381F] dark:text-[#D9AE29]" />
+                          {project.batch.name}
+                        </Link>
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {project.batch.status.toLowerCase()}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground space-y-1">
+                        <div>
+                          Studio:{" "}
+                          <span className="font-medium text-foreground">
+                            {project.company.name}
+                          </span>
+                        </div>
+                        {project.batch.startDate && project.batch.endDate && (
+                          <div>
+                            Duration:{" "}
+                            <span className="font-medium text-foreground">
+                              {format(project.batch.startDate, "d MMM yyyy")} –{" "}
+                              {format(project.batch.endDate, "d MMM yyyy")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="pt-1">
+                        <Button variant="outline" size="sm" asChild className="w-full text-xs h-8">
+                          <Link href={`/batches/${project.batch.id}`}>
+                            View Batch Cohort Details
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-xs text-muted-foreground space-y-2">
+                      <p>No cohort or trainee batch is linked to this initiative.</p>
+                      {canManage && (
+                        <LinkBatchDialog
+                          projectId={project.id}
+                          projectName={project.name}
+                          currentBatchId={null}
+                          batches={availableBatches}
+                          studios={studios}
+                          defaultCompanyId={project.companyId ?? undefined}
+                          trigger={
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-xs h-8 border-dashed gap-1 text-[#00381F] dark:text-[#D9AE29]"
+                            >
+                              <Plus className="size-3" />
+                              <span>Link or Create Batch</span>
+                            </Button>
+                          }
+                        />
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>

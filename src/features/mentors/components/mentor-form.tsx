@@ -80,11 +80,11 @@ export function MentorForm({
                 name="companyId"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Company *</FormLabel>
+                    <FormLabel>Studio Location *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a company" />
+                          <SelectValue placeholder="Select studio location" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

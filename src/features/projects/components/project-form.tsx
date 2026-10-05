@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CreateBatchDialog } from "@/features/batches/components/create-batch-dialog";
 
 type Option = { id: string; name: string };
 
@@ -46,6 +47,7 @@ export function ProjectForm({
   companies?: Option[];
 }) {
   const [pending, startTransition] = useTransition();
+  const [batchList, setBatchList] = useState<Option[]>(batches);
   const [image, setImage] = useState<File | null>(null);
   const [techInput, setTechInput] = useState("");
 
@@ -110,11 +112,11 @@ export function ProjectForm({
                 name="companyId"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Company *</FormLabel>
+                    <FormLabel>Studio Location *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select a company" />
+                          <SelectValue placeholder="Select studio location" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -263,7 +265,27 @@ export function ProjectForm({
               name="batchId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Batch</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Batch / Cohort</FormLabel>
+                    <CreateBatchDialog
+                      studios={companies}
+                      onSuccess={(newBatch) => {
+                        setBatchList((prev) => [
+                          { id: newBatch.id, name: newBatch.name },
+                          ...prev,
+                        ]);
+                        field.onChange(newBatch.id);
+                      }}
+                      trigger={
+                        <button
+                          type="button"
+                          className="text-xs text-[#00381F] dark:text-[#D9AE29] hover:underline font-medium cursor-pointer"
+                        >
+                          + Create Batch
+                        </button>
+                      }
+                    />
+                  </div>
                   <Select
                     onValueChange={(v) => field.onChange(v === "none" ? "" : v)}
                     value={field.value || "none"}
@@ -275,7 +297,7 @@ export function ProjectForm({
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="none">No batch</SelectItem>
-                      {batches.map((b) => (
+                      {batchList.map((b) => (
                         <SelectItem key={b.id} value={b.id}>
                           {b.name}
                         </SelectItem>

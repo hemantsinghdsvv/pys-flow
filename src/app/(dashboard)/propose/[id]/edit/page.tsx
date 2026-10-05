@@ -25,14 +25,22 @@ export default async function EditProposalPage({
 
   const scope = await companyFilter(user);
 
-  const [mentors] = await Promise.all([
+  const [mentors, studios] = await Promise.all([
     prisma.user.findMany({
       where: {
         ...scope,
-        
         isActive: true,
         deletedAt: null,
       },
+      select: {
+        id: true,
+        name: true,
+        orgRole: { select: { name: true } },
+      },
+      orderBy: { name: "asc" },
+    }),
+    prisma.company.findMany({
+      where: { deletedAt: null },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -47,6 +55,7 @@ export default async function EditProposalPage({
       <ProposalForm
         proposal={proposal}
         mentors={mentors}
+        studios={studios}
       />
     </div>
   );

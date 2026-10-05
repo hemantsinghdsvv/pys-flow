@@ -488,49 +488,7 @@ async function PragyaIntegrationSuspenseWrapper({ token, currentUser }: { token:
       )}
       <PragyaStatsView stats={pragyaStats} schedule={pragyaSchedule} />
       
-      {/* ── RAW API DATA DEBUG VIEWER ── */}
-      <Card className="border-red-200 dark:border-red-900/50 mt-8 bg-slate-50 dark:bg-slate-950">
-        <CardHeader className="pb-3 border-b mb-3 border-red-100 dark:border-red-900/50">
-          <CardTitle className="flex items-center gap-2 text-base text-red-600 dark:text-red-400">
-            <Code className="size-5" />
-            Raw API Data Monitor (Developer Mode)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-            <div className="bg-slate-900 rounded-md p-4 overflow-hidden border border-slate-700">
-               <h4 className="text-emerald-400 text-xs mb-2 uppercase font-semibold">API: /departments</h4>
-               <pre className="text-xs text-slate-300 font-mono overflow-auto max-h-64 scrollbar-thin">
-                 {JSON.stringify(pragyaDepartments, null, 2)}
-               </pre>
-            </div>
-            <div className="bg-slate-900 rounded-md p-4 overflow-hidden border border-slate-700">
-               <h4 className="text-amber-400 text-xs mb-2 uppercase font-semibold">API: /stats</h4>
-               <pre className="text-xs text-slate-300 font-mono overflow-auto max-h-64 scrollbar-thin">
-                 {JSON.stringify(pragyaStats, null, 2)}
-               </pre>
-            </div>
-            <div className="bg-slate-900 rounded-md p-4 overflow-hidden border border-slate-700">
-               <h4 className="text-cyan-400 text-xs mb-2 uppercase font-semibold">API: /schedule</h4>
-               <pre className="text-xs text-slate-300 font-mono overflow-auto max-h-64 scrollbar-thin">
-                 {JSON.stringify(pragyaSchedule, null, 2)}
-               </pre>
-            </div>
-            <div className="bg-slate-900 rounded-md p-4 overflow-hidden border border-slate-700">
-               <h4 className="text-fuchsia-400 text-xs mb-2 uppercase font-semibold">API: /get-profile</h4>
-               <pre className="text-xs text-slate-300 font-mono overflow-auto max-h-64 scrollbar-thin">
-                 {JSON.stringify(pragyaProfile, null, 2)}
-               </pre>
-            </div>
-            <div className="bg-slate-900 rounded-md p-4 overflow-hidden border border-slate-700">
-               <h4 className="text-indigo-400 text-xs mb-2 uppercase font-semibold">API: /my-role</h4>
-               <pre className="text-xs text-slate-300 font-mono overflow-auto max-h-64 scrollbar-thin">
-                 {JSON.stringify(pragyaRole, null, 2)}
-               </pre>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
          {/* ── VISUAL DEPARTMENTS & ROLES VIEWER ── */}
       {pragyaDepartments && pragyaDepartments.length > 0 && (
         <div className="mt-8">

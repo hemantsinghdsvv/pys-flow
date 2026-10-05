@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Plus, ArrowLeft, Calendar, AlertCircle } from "lucide-react";
+import { Loader2, Plus, ArrowLeft, Calendar, AlertCircle, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { createSimpleProject } from "@/features/projects/actions";
+import { CreateBatchDialog } from "@/features/batches/components/create-batch-dialog";
 
-export function YogaProjectForm() {
+interface YogaProjectFormProps {
+  batches?: { id: string; name: string }[];
+  studios?: { id: string; name: string }[];
+}
+
+export function YogaProjectForm({
+  batches: initialBatches = [],
+  studios = [],
+}: YogaProjectFormProps) {
   const router = useRouter();
+  const [batchesList, setBatchesList] = useState(initialBatches);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +41,7 @@ export function YogaProjectForm() {
     priority: "MEDIUM" as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
     startDate: new Date().toISOString().slice(0, 10),
     endDate: "",
+    batchId: "",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -51,6 +62,7 @@ export function YogaProjectForm() {
           priority: formData.priority,
           startDate: formData.startDate || undefined,
           endDate: formData.endDate || undefined,
+          batchId: formData.batchId || undefined,
         });
 
         if (res.success) {
@@ -185,6 +197,55 @@ export function YogaProjectForm() {
                 className="h-10 text-xs focus-visible:ring-[#00381F]"
               />
             </div>
+          </div>
+
+          {/* Batch / Cohort Selection */}
+          <div className="space-y-1.5 pt-2 border-t border-border/70">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Layers className="size-3.5 text-muted-foreground" />
+                Linked Batch / Cohort (Optional)
+              </Label>
+              <CreateBatchDialog
+                studios={studios}
+                onSuccess={(newBatch) => {
+                  setBatchesList((prev) => [
+                    { id: newBatch.id, name: newBatch.name },
+                    ...prev,
+                  ]);
+                  setFormData((prev) => ({ ...prev, batchId: newBatch.id }));
+                }}
+                trigger={
+                  <button
+                    type="button"
+                    className="text-xs text-[#00381F] dark:text-[#D9AE29] hover:underline font-semibold cursor-pointer"
+                  >
+                    + Create New Batch
+                  </button>
+                }
+              />
+            </div>
+            <Select
+              value={formData.batchId || "none"}
+              onValueChange={(val) =>
+                setFormData({ ...formData, batchId: val === "none" ? "" : val })
+              }
+            >
+              <SelectTrigger className="h-10 text-xs w-full">
+                <SelectValue placeholder="No batch linked (Independent initiative)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No batch linked (Independent initiative)</SelectItem>
+                {batchesList.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Link this initiative to an active cohort to keep trainee assignments synchronized.
+            </p>
           </div>
 
           {/* Form Actions */}

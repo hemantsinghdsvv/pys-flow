@@ -38,7 +38,9 @@ export function AssignPeopleDialog({
       try {
         if (kind === "mentor") await assignMentors(projectId, selected);
         else await assignStudents(projectId, selected);
-        toast.success(`${selected.length} ${kind}(s) assigned`);
+        toast.success(
+          `${selected.length} ${kind === "mentor" ? "team lead(s)" : "staff member(s)"} assigned`
+        );
         setSelected([]);
         setOpen(false);
       } catch (err) {
@@ -47,22 +49,22 @@ export function AssignPeopleDialog({
     });
   }
 
+  const kindLabel = kind === "mentor" ? "team leads" : "staff members";
+  const kindTitle = kind === "mentor" ? "Team Leads & Supervisors" : "Staff Members";
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline">
           <UserPlus className="size-4" />
-          Add {kind === "mentor" ? "mentors" : "students"}
+          Add {kindLabel}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            Assign {kind === "mentor" ? "mentors" : "students"}
-          </DialogTitle>
+          <DialogTitle>Assign {kindTitle}</DialogTitle>
           <DialogDescription>
-            Only {kind === "mentor" ? "mentors" : "students"} from this
-            project&apos;s company are listed.
+            Select {kind === "mentor" ? "Level 2 team leads / supervisors" : "Level 3 staff members"} to assign to this project.
           </DialogDescription>
         </DialogHeader>
         {options.length === 0 ? (
@@ -74,7 +76,7 @@ export function AssignPeopleDialog({
             options={options}
             selected={selected}
             onChange={setSelected}
-            placeholder={`Select ${kind}s...`}
+            placeholder={`Select ${kindLabel}...`}
           />
         )}
         <DialogFooter>

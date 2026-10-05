@@ -107,7 +107,7 @@ export function MentorsTable({
           <TableRow>
             <TableHead>User</TableHead>
             <TableHead>Role</TableHead>
-            <TableHead>Company</TableHead>
+            <TableHead>Studio</TableHead>
             <TableHead>Designation</TableHead>
             <TableHead>Projects</TableHead>
             <TableHead>Status</TableHead>

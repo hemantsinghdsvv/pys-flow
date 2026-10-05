@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { MentorsTable, type StaffRow } from "@/features/mentors/components/mentors-table";
 import { BulkUploadDialog } from "@/features/mentors/components/bulk-upload-dialog";
 
-export const metadata: Metadata = { title: "Mentors & Staff" };
+export const metadata: Metadata = { title: "Team Leads & Staff" };
 
 export default async function MentorsPage({
   searchParams,
@@ -73,8 +73,8 @@ export default async function MentorsPage({
       )}
 
       <PageHeader
-        title="Mentors & Staff"
-        description="Mentors, coordinators, and company admins."
+        title="Team Leads & Staff"
+        description="Team leads, supervisors, coordinators, and teachers across studios."
         actions={
           <div className="flex items-center gap-2">
             {isSuperAdmin && <BulkUploadDialog companies={companies} activeCompanyId={activeCompanyId} />}
