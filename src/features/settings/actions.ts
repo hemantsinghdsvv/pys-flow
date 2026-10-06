@@ -12,8 +12,18 @@ import {
   invalidatePermissionCache,
   can,
 } from "@/lib/permissions";
-import { sendEmail, isEmailConfigured } from "@/lib/email/mailer";
-import { renderNotificationEmail } from "@/lib/email/templates";
+import {
+  sendEmail,
+  isEmailConfigured,
+  verifyEmailConnection,
+} from "@/lib/email/mailer";
+import {
+  renderNotificationEmail,
+  renderTemplatePreview,
+  EMAIL_TEMPLATE_CATALOG,
+  type TemplateInfo,
+} from "@/lib/email/templates";
+import type { NotificationType } from "@prisma/client";
 import {
   holidaySchema,
   departmentSchema,
@@ -25,28 +35,370 @@ import {
   type ReminderSettingValues,
 } from "@/features/settings/schemas";
 
-// ─────────────────────────── Email ───────────────────────────
+// ─────────────────────────── Mail & Reminders Hub ───────────────────────────
 
-/** Send a test email to the signed-in admin to verify SMTP (Brevo) setup. */
-export async function sendTestEmail(): Promise<{ sent: boolean; reason?: string }> {
+const DEFAULT_REMINDERS = [
+  {
+    key: "login_reminder",
+    label: "Morning Check-In Reminder",
+    description: "Prompts staff and trainees at morning start (9:30 AM) to check in, acknowledge assignments, and review studio schedule.",
+    defaultHour: 9,
+    defaultMinute: 30,
+  },
+  {
+    key: "worklog_reminder",
+    label: "Midday Work Log Reminder",
+    description: "Afternoon prompt (4:30 PM) reminding active members to log hours and update task progress.",
+    defaultHour: 16,
+    defaultMinute: 30,
+  },
+  {
+    key: "submission_reminder",
+    label: "End-of-Day Submission Reminder",
+    description: "Notice dispatched during the 5:30 PM – 6:30 PM window to complete and submit daily accountability logs.",
+    defaultHour: 17,
+    defaultMinute: 30,
+  },
+  {
+    key: "daily_reminder",
+    label: "Daily Report Final Reminder",
+    description: "Evening reminder (6:00 PM) sent to members who have not submitted their daily report before end of day.",
+    defaultHour: 18,
+    defaultMinute: 0,
+  },
+  {
+    key: "task_reminder",
+    label: "Task Progress Reminder",
+    description: "Periodic reminder to keep ongoing tasks updated and log progress.",
+    defaultHour: 10,
+    defaultMinute: 0,
+  },
+  {
+    key: "deadline_reminder",
+    label: "Upcoming Deadline Alert",
+    description: "High-priority notification sent when a task deadline is approaching within 24 hours.",
+    defaultHour: 9,
+    defaultMinute: 0,
+  },
+];
+
+export type MailSettingsData = {
+  currentUser: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+  companyName: string;
+  smtp: {
+    isConfigured: boolean;
+    host: string;
+    port: number;
+    user: string;
+    from: string;
+    devOverride: string | null;
+  };
+  globalRemindersEnabled: boolean;
+  reminders: Array<{
+    key: string;
+    label: string;
+    description: string;
+    hour: number;
+    minute: number;
+    enabled: boolean;
+  }>;
+  templates: Array<
+    TemplateInfo & {
+      hasOverride: boolean;
+      customSubject: string | null;
+      customBody: string | null;
+      previewSubject: string;
+      previewHtml: string;
+    }
+  >;
+  recentNotifications: Array<{
+    id: string;
+    userName: string;
+    userEmail: string;
+    type: string;
+    title: string;
+    message: string;
+    link: string | null;
+    isRead: boolean;
+    createdAt: string;
+  }>;
+  holidays: Array<{ id: string; name: string; date: string }>;
+  departments: Array<{ id: string; name: string; extra: string | null }>;
+  technologies: Array<{ id: string; name: string; extra: string | null }>;
+};
+
+/** Fetch complete mail, templates, and reminders configuration for the Settings page. */
+export async function getMailSettingsData(): Promise<MailSettingsData> {
+  const user = await requirePermission("settings:manage");
+  const scope = await companyScope(user);
+
+  // Authoritative current user & company lookup
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      company: { select: { id: true, name: true } },
+    },
+  });
+
+  const currentUser = {
+    id: user.id,
+    name: dbUser?.name || user.name || "Administrator",
+    email: dbUser?.email || user.email || "admin@pyshk.com",
+    role: dbUser?.role || user.role,
+  };
+  const companyName = dbUser?.company?.name || "Pragya Yog School";
+
+  // 1. SMTP info
+  const smtp = {
+    isConfigured: isEmailConfigured(),
+    host: process.env.SMTP_HOST?.trim() || "Not configured",
+    port: Number(process.env.SMTP_PORT ?? 587),
+    user: process.env.SMTP_USER?.trim() || "Not configured",
+    from: process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim() || "Not configured",
+    devOverride: process.env.DEV_EMAIL_OVERRIDE?.trim() || null,
+  };
+
+  // 2. Global Reminders state
+  const globalSetting = await prisma.reminderSetting
+    .findUnique({ where: { key: "global_automated_reminders" } })
+    .catch(() => null);
+  const envEnabled = process.env.ENABLE_EMAIL_REMINDERS?.trim().toLowerCase() === "true";
+  const globalRemindersEnabled = globalSetting ? globalSetting.enabled : envEnabled;
+
+  // 3. Reminders list
+  const existingReminders = await prisma.reminderSetting.findMany().catch(() => []);
+  const reminders = DEFAULT_REMINDERS.map((def) => {
+    const match = existingReminders.find((r) => r.key === def.key);
+    return {
+      key: def.key,
+      label: def.label,
+      description: def.description,
+      hour: match ? match.hour : def.defaultHour,
+      minute: match ? match.minute : def.defaultMinute,
+      enabled: match ? match.enabled : false,
+    };
+  });
+
+  // 4. Email Templates with overrides (personalized preview for active user)
+  const overrides = await (prisma as any).emailTemplate.findMany().catch(() => []);
+  const templates = EMAIL_TEMPLATE_CATALOG.map((item) => {
+    const match = overrides.find((o: any) => o.key === item.key);
+    const preview = renderTemplatePreview(
+      item.type,
+      match?.subject,
+      match?.body,
+      currentUser.name
+    );
+    return {
+      ...item,
+      hasOverride: Boolean(match),
+      customSubject: match?.subject ?? null,
+      customBody: match?.body ?? null,
+      previewSubject: preview.subject,
+      previewHtml: preview.html,
+    };
+  });
+
+  // 5. Recent notifications
+  const recentNotificationsRaw = await prisma.notification
+    .findMany({
+      take: 20,
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: { select: { name: true, email: true } },
+      },
+    })
+    .catch(() => []);
+
+  const recentNotifications = recentNotificationsRaw.map((n) => ({
+    id: n.id,
+    userName: n.user?.name ?? "Unknown",
+    userEmail: n.user?.email ?? "",
+    type: n.type,
+    title: n.title,
+    message: n.message,
+    link: n.link,
+    isRead: n.isRead,
+    createdAt: n.createdAt.toISOString(),
+  }));
+
+  // 6. Holidays & Taxonomies
+  const holidaysRaw = await prisma.holiday.findMany({
+    where: scope ? { companyId: scope } : undefined,
+    orderBy: { date: "asc" },
+  });
+  const holidays = holidaysRaw.map((h) => ({
+    id: h.id,
+    name: h.name,
+    date: h.date.toISOString(),
+  }));
+
+  const departmentsRaw = await prisma.department.findMany({
+    orderBy: { name: "asc" },
+  });
+  const departments = departmentsRaw.map((d) => ({
+    id: d.id,
+    name: d.name,
+    extra: d.code,
+  }));
+
+  const technologiesRaw = await prisma.technology.findMany({
+    orderBy: { name: "asc" },
+  });
+  const technologies = technologiesRaw.map((t) => ({
+    id: t.id,
+    name: t.name,
+    extra: t.category,
+  }));
+
+  return {
+    currentUser,
+    companyName,
+    smtp,
+    globalRemindersEnabled,
+    reminders,
+    templates,
+    recentNotifications,
+    holidays,
+    departments,
+    technologies,
+  };
+}
+
+/** Verify SMTP connection. */
+export async function verifySmtpConnectionAction(): Promise<{
+  ok: boolean;
+  error?: string;
+}> {
+  await requirePermission("settings:manage");
+  return verifyEmailConnection();
+}
+
+/** Send a test email to the signed-in admin or custom recipient. */
+export async function sendTestEmail(customTo?: string): Promise<{
+  sent: boolean;
+  reason?: string;
+}> {
   const user = await requirePermission("settings:manage");
   if (!isEmailConfigured()) {
-    return { sent: false, reason: "SMTP is not configured in the environment." };
+    return { sent: false, reason: "SMTP is not configured in the environment (.env)." };
   }
 
+  const to = customTo?.trim() || user.email;
   const { subject, html } = await renderNotificationEmail({
     type: "SYSTEM",
-    title: "DRISHTI email is working 🎉",
+    title: "PYS Flow email is configured successfully 🎉",
     message:
-      "This is a test message confirming your SMTP (Brevo) configuration is correct. Notifications and reminders will now be delivered by email.",
+      `This is a test verification message confirming your SMTP (Brevo) configuration is operational. Notifications from Pragya Yog School Operations Portal (PYS Flow) can now be delivered by email. Target recipient: ${to}`,
     link: "/settings",
     recipientName: user.name,
   });
 
-  const { sent } = await sendEmail({ to: user.email, subject, html });
+  const { sent } = await sendEmail({ to, subject, html });
   return sent
     ? { sent: true }
     : { sent: false, reason: "The mail server rejected the message. Check credentials." };
+}
+
+/** Send a live sample of a specific template to verify in-inbox rendering. */
+export async function sendTemplateSampleAction(
+  type: NotificationType,
+  customTo?: string
+): Promise<{ sent: boolean; reason?: string }> {
+  const user = await requirePermission("settings:manage");
+  if (!isEmailConfigured()) {
+    return { sent: false, reason: "SMTP is not configured in the environment (.env)." };
+  }
+
+  const to = customTo?.trim() || user.email;
+  const preview = renderTemplatePreview(type, undefined, undefined, user.name);
+
+  const { sent } = await sendEmail({
+    to,
+    subject: preview.subject,
+    html: preview.html,
+  });
+
+  return sent
+    ? { sent: true }
+    : { sent: false, reason: "The mail server rejected the sample email. Verify credentials." };
+}
+
+/** Save custom subject and body override for an email template. */
+export async function saveEmailTemplateOverrideAction({
+  key,
+  subject,
+  body,
+}: {
+  key: string;
+  subject: string;
+  body: string;
+}) {
+  const user = await requirePermission("settings:manage");
+  await (prisma as any).emailTemplate.upsert({
+    where: { key },
+    create: { key, subject: subject.trim(), body: body.trim() },
+    update: { subject: subject.trim(), body: body.trim() },
+  });
+
+  await logActivity({
+    userId: user.id,
+    action: "UPDATE",
+    entityType: "EmailTemplate",
+    entityName: key,
+  });
+  revalidatePath("/settings");
+  return { success: true };
+}
+
+/** Reset an email template back to the built-in PYS branded default. */
+export async function resetEmailTemplateOverrideAction({ key }: { key: string }) {
+  const user = await requirePermission("settings:manage");
+  await (prisma as any).emailTemplate
+    .delete({ where: { key } })
+    .catch(() => null);
+
+  await logActivity({
+    userId: user.id,
+    action: "DELETE",
+    entityType: "EmailTemplate",
+    entityName: key,
+  });
+  revalidatePath("/settings");
+  return { success: true };
+}
+
+/** Toggle the global automated email reminders master switch. */
+export async function toggleGlobalRemindersAction(enabled: boolean) {
+  const user = await requirePermission("settings:manage");
+  await prisma.reminderSetting.upsert({
+    where: { key: "global_automated_reminders" },
+    create: {
+      key: "global_automated_reminders",
+      hour: 0,
+      minute: 0,
+      enabled,
+    },
+    update: { enabled },
+  });
+
+  await logActivity({
+    userId: user.id,
+    action: "UPDATE",
+    entityType: "ReminderSetting",
+    entityName: "global_automated_reminders",
+  });
+  revalidatePath("/settings");
+  return { success: true, enabled };
 }
 
 // ─────────────────────────── Holidays ───────────────────────────

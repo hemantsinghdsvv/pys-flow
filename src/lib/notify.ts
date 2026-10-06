@@ -15,7 +15,48 @@ export type NotifyInput = {
 };
 
 /**
- * Create an in-app notification and (when SMTP is configured) email the user.
+ * Types of notifications considered automated mail reminders.
+ * Email dispatch for these types is disabled by default.
+ * Set ENABLE_EMAIL_REMINDERS="true" in .env to re-enable them.
+ */
+const REMINDER_NOTIFICATION_TYPES = new Set<NotificationType>([
+  "DAILY_REMINDER",
+  "LOGIN_REMINDER",
+  "WORK_LOG_REMINDER",
+  "SUBMISSION_REMINDER",
+  "TASK_REMINDER",
+  "DEADLINE_REMINDER",
+  "MISSED_REPORT",
+]);
+
+async function shouldSendNotificationEmail(
+  type: NotificationType,
+  explicitEmailFlag?: boolean
+): Promise<boolean> {
+  if (explicitEmailFlag === false) return false;
+  if (!isEmailConfigured()) return false;
+
+  // Automated reminder emails are disabled by default
+  if (REMINDER_NOTIFICATION_TYPES.has(type)) {
+    // 1. Check env flag
+    if (process.env.ENABLE_EMAIL_REMINDERS?.trim().toLowerCase() === "true") {
+      return true;
+    }
+    // 2. Check DB setting toggle
+    const setting = await prisma.reminderSetting
+      .findUnique({ where: { key: "global_automated_reminders" } })
+      .catch(() => null);
+    if (setting?.enabled) {
+      return true;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Create an in-app notification and (when SMTP is configured and not disabled) email the user.
  * Email dispatch is fire-and-forget and never blocks or breaks the caller.
  */
 export async function notify(input: NotifyInput): Promise<void> {
@@ -29,7 +70,7 @@ export async function notify(input: NotifyInput): Promise<void> {
     },
   });
 
-  if (input.email === false || !isEmailConfigured()) return;
+  if (!(await shouldSendNotificationEmail(input.type, input.email))) return;
 
   try {
     const user = await prisma.user.findUnique({
@@ -68,7 +109,7 @@ export async function notifyMany(
     })),
   });
 
-  if (payload.email === false || !isEmailConfigured()) return;
+  if (!(await shouldSendNotificationEmail(payload.type, payload.email))) return;
 
   try {
     const users = await prisma.user.findMany({
@@ -93,3 +134,4 @@ export async function notifyMany(
     console.error("notifyMany email failed", err);
   }
 }
+

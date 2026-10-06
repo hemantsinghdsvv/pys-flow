@@ -93,6 +93,12 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: Activity,
         permission: "feature:settings",
       },
+      {
+        title: "Settings",
+        href: "/settings",
+        icon: Settings,
+        permission: "feature:settings",
+      },
     ],
   },
 ];

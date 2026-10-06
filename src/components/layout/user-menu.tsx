@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut, User as UserIcon } from "lucide-react";
+import { LogOut, User as UserIcon, Settings as SettingsIcon } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import { logoutWithPragya } from "@/features/auth/server-actions";
@@ -55,6 +55,9 @@ export function UserMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push("/profile")}>
           <UserIcon className="size-4" /> Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push("/settings")}>
+          <SettingsIcon className="size-4" /> Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} variant="destructive">

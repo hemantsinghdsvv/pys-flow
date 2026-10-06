@@ -46,8 +46,8 @@ function getTransport(): Transporter | null {
 
 function fromAddress(): string {
   const from = process.env.SMTP_FROM?.trim();
-  if (from) return `DRISHTI <${from}>`;
-  return `DRISHTI <${process.env.SMTP_USER?.trim()}>`;
+  if (from) return `Pragya Yog School <${from}>`;
+  return `Pragya Yog School <${process.env.SMTP_USER?.trim()}>`;
 }
 
 export type SendEmailInput = {

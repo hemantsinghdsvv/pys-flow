@@ -104,8 +104,9 @@ export async function GET(
           type: "MISSED_REPORT",
           title: "Missed daily report",
           message:
-            "You have no daily report and were marked absent. Please submit and inform your mentor.",
+            "You have no daily report and were marked absent. Please submit and inform your supervisor.",
           link: "/daily-logs/new",
+          email: false, // Automated mail reminder disabled
         });
         notified++;
       }
@@ -113,146 +114,21 @@ export async function GET(
     return NextResponse.json({ ok: true, job, absents, notified });
   }
 
-  // ── reminders (legacy) ─────────────────────────────────────────────────
-  if (job === "reminders") {
-    const today = utcDay();
-    const students = await prisma.user.findMany({
-      where: { isSystemAdmin: false, isActive: true, deletedAt: null },
-      select: { id: true },
+  // ── Automated mail reminders (DISABLED) ──────────────────────────────────
+  // The automated reminder jobs below have been disabled.
+  if (
+    job === "reminders" ||
+    job === "login-reminder" ||
+    job === "worklog-reminder" ||
+    job === "submission-reminder"
+  ) {
+    return NextResponse.json({
+      ok: true,
+      job,
+      disabled: true,
+      reminded: 0,
+      message: "Automated mail reminders are currently disabled.",
     });
-
-    let reminded = 0;
-    for (const s of students) {
-      const log = await prisma.dailyLog.findUnique({
-        where: { studentId_date: { studentId: s.id, date: today } },
-        select: { id: true },
-      });
-      if (log) continue;
-
-      const already = await prisma.notification.findFirst({
-        where: { userId: s.id, type: "DAILY_REMINDER", createdAt: { gte: today } },
-        select: { id: true },
-      });
-      if (already) continue;
-
-      await notify({
-        userId: s.id,
-        type: "DAILY_REMINDER",
-        title: "Submit your daily report",
-        message: "Don't forget to log today's work before end of day.",
-        link: "/daily-logs/new",
-      });
-      reminded++;
-    }
-    return NextResponse.json({ ok: true, job, reminded });
-  }
-
-  // ── login-reminder — 9:30 AM IST (4:00 AM UTC) ────────────────────────
-  if (job === "login-reminder") {
-    const today = utcDay();
-    if (await isNonWorkingDay(today)) {
-      return NextResponse.json({ ok: true, job, skipped: "non-working day" });
-    }
-
-    const students = await getActiveStudents();
-    let reminded = 0;
-
-    for (const s of students) {
-      const timeline = await prisma.dailyTimeline.findUnique({
-        where: { studentId_date: { studentId: s.id, date: today } },
-        select: { loginAt: true },
-      });
-      if (timeline?.loginAt) continue; // already logged in
-
-      const already = await prisma.notification.findFirst({
-        where: { userId: s.id, type: "LOGIN_REMINDER", createdAt: { gte: today } },
-        select: { id: true },
-      });
-      if (already) continue;
-
-      await notify({
-        userId: s.id,
-        type: "LOGIN_REMINDER",
-        title: "Good morning! Please login and acknowledge your tasks",
-        message:
-          "Please login to DRISHTI and acknowledge today's assigned tasks before 10:00 AM.",
-        link: "/tasks",
-      });
-      reminded++;
-    }
-    return NextResponse.json({ ok: true, job, reminded });
-  }
-
-  // ── worklog-reminder — 4:30 PM IST (11:00 AM UTC) ─────────────────────
-  if (job === "worklog-reminder") {
-    const today = utcDay();
-    if (await isNonWorkingDay(today)) {
-      return NextResponse.json({ ok: true, job, skipped: "non-working day" });
-    }
-
-    const students = await getActiveStudents();
-    let reminded = 0;
-
-    for (const s of students) {
-      const timeline = await prisma.dailyTimeline.findUnique({
-        where: { studentId_date: { studentId: s.id, date: today } },
-        select: { workLogUpdatedAt: true },
-      });
-      if (timeline?.workLogUpdatedAt) continue; // already updated work log
-
-      const already = await prisma.notification.findFirst({
-        where: { userId: s.id, type: "WORK_LOG_REMINDER", createdAt: { gte: today } },
-        select: { id: true },
-      });
-      if (already) continue;
-
-      await notify({
-        userId: s.id,
-        type: "WORK_LOG_REMINDER",
-        title: "Please update your daily work log",
-        message:
-          "It's 4:30 PM — please update your daily work log to reflect today's progress.",
-        link: "/daily-logs/new",
-      });
-      reminded++;
-    }
-    return NextResponse.json({ ok: true, job, reminded });
-  }
-
-  // ── submission-reminder — 5:30 PM IST (12:00 PM UTC) ──────────────────
-  if (job === "submission-reminder") {
-    const today = utcDay();
-    if (await isNonWorkingDay(today)) {
-      return NextResponse.json({ ok: true, job, skipped: "non-working day" });
-    }
-
-    const students = await getActiveStudents();
-    let reminded = 0;
-
-    for (const s of students) {
-      const log = await prisma.dailyLog.findUnique({
-        where: { studentId_date: { studentId: s.id, date: today } },
-        select: { id: true },
-      });
-      if (log) continue; // already submitted
-
-      const already = await prisma.notification.findFirst({
-        where: { userId: s.id, type: "SUBMISSION_REMINDER", createdAt: { gte: today } },
-        select: { id: true },
-      });
-      if (already) continue;
-
-      await notify({
-        userId: s.id,
-        type: "SUBMISSION_REMINDER",
-        title: "Please submit today's internship work before 6:30 PM",
-        message:
-          "Submission window is 5:30 PM – 6:30 PM. Please submit your daily report now.",
-        link: "/daily-logs/new",
-      });
-      reminded++;
-    }
-    return NextResponse.json({ ok: true, job, reminded });
   }
 
   return NextResponse.json({ error: "Unknown job" }, { status: 404 });
